@@ -23,8 +23,7 @@ function App() {
   const hoy = new Date().toISOString().split('T')[0];
   
   const [transacciones, setTransacciones] = useState([
-    { fecha: '2026-10-01', ingresos: 4000, gastos: 2400 },
-    { fecha: '2026-10-05', ingresos: 3000, gastos: 1398 },
+
   ]);
 
   const [monto, setMonto] = useState('');
@@ -36,21 +35,19 @@ function App() {
     if (!monto || !dia) return;
 
     const montoNum = Number(monto);
-    if (isNaN(montoNum)) return;
     
-    // Clonamos profundamente los datos para evitar mutación directa
-    let nuevosDatos = transacciones.map(t => ({ ...t }));
+    let nuevosDatos = [...transacciones];
     const indexExistente = nuevosDatos.findIndex(t => t.fecha === dia);
 
     if (indexExistente >= 0) {
-      // Si la fecha ya existe, sumamos o modificamos
+      // Si la fecha ya existe se suma o modifica el monto según el tipo
       if (tipo === 'ingresos') {
         nuevosDatos[indexExistente].ingresos += montoNum;
       } else {
         nuevosDatos[indexExistente].gastos += montoNum;
       }
     } else {
-      // Si es una fecha nueva, la agregamos
+      // Si es una fecha nueva se agrega
       nuevosDatos.push({
         fecha: dia,
         ingresos: tipo === 'ingresos' ? montoNum : 0,
@@ -78,81 +75,7 @@ function App() {
     { id: 'usuarios', name: 'Administración de Usuarios', icon: UserCog },
   ];
 
-  return (
-    <div className="min-h-screen bg-[#0b1121] flex overflow-hidden">
-      {/* Background gradients */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/10 blur-[120px]" />
-      </div>
-
-      {/* Sidebar Simplificado */}
-      <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} glass border-r border-slate-800/50 z-20 transition-all duration-300 flex flex-col`}>
-        <div className="h-20 flex items-center justify-between px-4 border-b border-slate-800/50">
-          {isSidebarOpen && <span className="font-bold text-xl text-white ml-2">Mini<span className="text-indigo-400">ERP</span></span>}
-          <button type="button" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 mx-auto transition-colors">
-            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
-        <nav className="flex-1 py-6 px-3 space-y-2">
-          {modules.map((m) => {
-            const Icon = m.icon;
-            const isActive = activeModule === m.id;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setActiveModule(m.id)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${isActive ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/20' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border border-transparent'}`}
-              >
-                <Icon size={20} />
-                {isSidebarOpen && <span className="font-medium">{m.name}</span>}
-              </button>
-            )
-          })}
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col h-screen z-10">
-        <header className="h-20 glass border-b border-slate-800/50 px-8 flex items-center">
-          <span className="text-indigo-400 font-medium bg-indigo-500/10 px-4 py-1.5 rounded-full border border-indigo-500/20 text-sm">
-            Modo Simplificado Activo
-          </span>
-        </header>
-        <div className="flex-1 overflow-auto p-4 md:p-8 relative">
-          {activeModule === 'dashboard' ? (
-            <DashboardSimple
-              dia={dia}
-              setDia={setDia}
-              monto={monto}
-              setMonto={setMonto}
-              tipo={tipo}
-              setTipo={setTipo}
-              agregarDato={agregarDato}
-              transacciones={transacciones}
-            />
-          ) : (
-            <div className="glass-panel rounded-2xl h-full flex items-center justify-center text-slate-500">
-              Contenido de Registro Rápido (Próximamente)
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
-  );
-}
-
-function DashboardSimple({
-  dia,
-  setDia,
-  monto,
-  setMonto,
-  tipo,
-  setTipo,
-  agregarDato,
-  transacciones,
-}) {
-  return (
+  const DashboardSimple = () => (
     <div className="w-full h-full flex flex-col gap-6 animation-fade-in">
       <div className="flex flex-col xl:flex-row gap-6">
 
@@ -225,6 +148,59 @@ function DashboardSimple({
       </div>
     </div>
   );
+
+  return (
+    <div className="min-h-screen bg-[#0b1121] flex overflow-hidden">
+      {/* Background gradients */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/10 blur-[120px]" />
+      </div>
+
+      {/* Sidebar Simplificado */}
+      <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} glass border-r border-slate-800/50 z-20 transition-all duration-300 flex flex-col`}>
+        <div className="h-20 flex items-center justify-between px-4 border-b border-slate-800/50">
+          {isSidebarOpen && <span className="font-bold text-xl text-white ml-2">Mini<span className="text-indigo-400">ERP</span></span>}
+          <button type="button" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 mx-auto transition-colors">
+            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+        <nav className="flex-1 py-6 px-3 space-y-2">
+          {modules.map((m) => {
+            const Icon = m.icon;
+            const isActive = activeModule === m.id;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setActiveModule(m.id)}
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${isActive ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/20' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border border-transparent'}`}
+              >
+                <Icon size={20} />
+                {isSidebarOpen && <span className="font-medium">{m.name}</span>}
+              </button>
+            )
+          })}
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col h-screen z-10">
+        <header className="h-20 glass border-b border-slate-800/50 px-8 flex items-center">
+          <span className="text-indigo-400 font-medium bg-indigo-500/10 px-4 py-1.5 rounded-full border border-indigo-500/20 text-sm">
+            Modo Simplificado Activo
+          </span>
+        </header>
+        <div className="flex-1 overflow-auto p-4 md:p-8 relative">
+          {activeModule === 'dashboard' ? <DashboardSimple /> : (
+            <div className="glass-panel rounded-2xl h-full flex items-center justify-center text-slate-500">
+              Contenido de Registro Rápido (Próximamente)
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
 }
 
 export default App;
+
