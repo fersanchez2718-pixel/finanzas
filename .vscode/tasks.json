@@ -1,0 +1,63 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "npm: frontend:dev",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npm run dev"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/Frontend Web"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "vite",
+          "endsPattern": "ready in"
+        }
+      },
+      "detail": "Start Vite dev server"
+    },
+    {
+      "label": "npm: backend:dev",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npm run dev"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/Backend Web"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "nodemon",
+          "endsPattern": "corriendo"
+        }
+      },
+      "detail": "Start Node backend server"
+    },
+    {
+      "label": "Arrancar Sistema Completo",
+      "dependsOn": [
+        "npm: backend:dev",
+        "npm: frontend:dev"
+      ],
+      "dependsOrder": "parallel"
+    }
+  ]
+}

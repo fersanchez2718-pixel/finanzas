@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "msedge",
+      "request": "launch",
+      "name": "Arrancar Todo (Edge)",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/Frontend Web/src",
+      "preLaunchTask": "Arrancar Sistema Completo"
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Arrancar Todo (Chrome)",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/Frontend Web/src",
+      "preLaunchTask": "Arrancar Sistema Completo"
+    }
+  ]
+}
