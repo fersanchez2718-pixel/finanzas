@@ -15,67 +15,32 @@ import {
   Plus
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import CatalogoMateriaPrima from './components/CatalogoMateriaPrima';
 
-function App() {
-  const [activeModule, setActiveModule] = useState('dashboard');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+const modules = [
+  { id: 'dashboard', name: 'Dashboard Central', icon: LayoutDashboard },
+  { id: 'catalogo', name: 'Catálogo de Materia Prima', icon: Carrot },
+  { id: 'inventario', name: 'Gestión de Inventario', icon: Package },
+  { id: 'compras', name: 'Registro de Compras', icon: ShoppingCart },
+  { id: 'mermas', name: 'Control de Mermas', icon: Trash2 },
+  { id: 'ventas', name: 'Registro de Ventas', icon: BadgeDollarSign },
+  { id: 'gastos', name: 'Gastos Operativos', icon: Receipt },
+  { id: 'nomina', name: 'Nómina y Sueldos', icon: Users },
+  { id: 'proveedores', name: 'Directorio de Proveedores', icon: Contact2 },
+  { id: 'usuarios', name: 'Administración de Usuarios', icon: UserCog },
+];
 
-  const hoy = new Date().toISOString().split('T')[0];
-  
-  const [transacciones, setTransacciones] = useState([
-
-  ]);
-
-  const [monto, setMonto] = useState('');
-  const [tipo, setTipo] = useState('ingresos');
-  const [dia, setDia] = useState(hoy);
-
-  const agregarDato = (e) => {
-    e.preventDefault();
-    if (!monto || !dia) return;
-
-    const montoNum = Number(monto);
-    
-    let nuevosDatos = [...transacciones];
-    const indexExistente = nuevosDatos.findIndex(t => t.fecha === dia);
-
-    if (indexExistente >= 0) {
-      // Si la fecha ya existe se suma o modifica el monto según el tipo
-      if (tipo === 'ingresos') {
-        nuevosDatos[indexExistente].ingresos += montoNum;
-      } else {
-        nuevosDatos[indexExistente].gastos += montoNum;
-      }
-    } else {
-      // Si es una fecha nueva se agrega
-      nuevosDatos.push({
-        fecha: dia,
-        ingresos: tipo === 'ingresos' ? montoNum : 0,
-        gastos: tipo === 'gastos' ? montoNum : 0,
-      });
-    }
-
-    // Ordenamos cronológicamente por fecha
-    nuevosDatos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-
-    setTransacciones(nuevosDatos);
-    setMonto(''); // Limpiamos el monto, dejamos la fecha
-  };
-
-  const modules = [
-    { id: 'dashboard', name: 'Dashboard Central', icon: LayoutDashboard },
-    { id: 'catalogo', name: 'Catálogo de Materia Prima', icon: Carrot },
-    { id: 'inventario', name: 'Gestión de Inventario', icon: Package },
-    { id: 'compras', name: 'Registro de Compras', icon: ShoppingCart },
-    { id: 'mermas', name: 'Control de Mermas', icon: Trash2 },
-    { id: 'ventas', name: 'Registro de Ventas', icon: BadgeDollarSign },
-    { id: 'gastos', name: 'Gastos Operativos', icon: Receipt },
-    { id: 'nomina', name: 'Nómina y Sueldos', icon: Users },
-    { id: 'proveedores', name: 'Directorio de Proveedores', icon: Contact2 },
-    { id: 'usuarios', name: 'Administración de Usuarios', icon: UserCog },
-  ];
-
-  const DashboardSimple = () => (
+function DashboardSimple({
+  dia,
+  setDia,
+  monto,
+  setMonto,
+  tipo,
+  setTipo,
+  agregarDato,
+  transacciones,
+}) {
+  return (
     <div className="w-full h-full flex flex-col gap-6 animation-fade-in">
       <div className="flex flex-col xl:flex-row gap-6">
 
@@ -148,6 +113,55 @@ function App() {
       </div>
     </div>
   );
+}
+
+function App() {
+  const [activeModule, setActiveModule] = useState('catalogo'); // Inicia en catálogo para visualización inmediata
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const hoy = new Date().toISOString().split('T')[0];
+  
+  const [transacciones, setTransacciones] = useState([
+    { fecha: '2026-10-01', ingresos: 4000, gastos: 2400 },
+    { fecha: '2026-10-05', ingresos: 3000, gastos: 1398 },
+  ]);
+
+  const [monto, setMonto] = useState('');
+  const [tipo, setTipo] = useState('ingresos');
+  const [dia, setDia] = useState(hoy);
+
+  const agregarDato = (e) => {
+    e.preventDefault();
+    if (!monto || !dia) return;
+
+    const montoNum = Number(monto);
+    if (isNaN(montoNum)) return;
+    
+    // Clonación inmutable profunda
+    let nuevosDatos = transacciones.map(t => ({ ...t }));
+    const indexExistente = nuevosDatos.findIndex(t => t.fecha === dia);
+
+    if (indexExistente >= 0) {
+      if (tipo === 'ingresos') {
+        nuevosDatos[indexExistente].ingresos += montoNum;
+      } else {
+        nuevosDatos[indexExistente].gastos += montoNum;
+      }
+    } else {
+      nuevosDatos.push({
+        fecha: dia,
+        ingresos: tipo === 'ingresos' ? montoNum : 0,
+        gastos: tipo === 'gastos' ? montoNum : 0,
+      });
+    }
+
+    nuevosDatos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    setTransacciones(nuevosDatos);
+    setMonto('');
+  };
+
+  const activeModuleName = modules.find(m => m.id === activeModule)?.name || 'Finanzas y Control';
 
   return (
     <div className="min-h-screen bg-[#0b1121] flex overflow-hidden">
@@ -156,15 +170,27 @@ function App() {
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/10 blur-[120px]" />
       </div>
 
-      {/* Sidebar Simplificado */}
+      {/* Sidebar de Navegación */}
       <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} glass border-r border-slate-800/50 z-20 transition-all duration-300 flex flex-col`}>
         <div className="h-20 flex items-center justify-between px-4 border-b border-slate-800/50">
-          {isSidebarOpen && <span className="font-bold text-xl text-white ml-2">Mini<span className="text-indigo-400">ERP</span></span>}
-          <button type="button" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 mx-auto transition-colors">
+          {isSidebarOpen && (
+            <div className="flex items-center gap-2 ml-2">
+              <span className="font-bold text-xl text-white">Food<span className="text-orange-400">ERP</span></span>
+              <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                PRO
+              </span>
+            </div>
+          )}
+          <button 
+            type="button" 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 mx-auto transition-colors"
+          >
             {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
-        <nav className="flex-1 py-6 px-3 space-y-2">
+
+        <nav className="flex-1 py-4 px-3 space-y-1.5 overflow-y-auto">
           {modules.map((m) => {
             const Icon = m.icon;
             const isActive = activeModule === m.id;
@@ -173,27 +199,68 @@ function App() {
                 key={m.id}
                 type="button"
                 onClick={() => setActiveModule(m.id)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${isActive ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/20' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border border-transparent'}`}
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
+                  isActive 
+                    ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/25 shadow-lg shadow-indigo-500/10' 
+                    : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border border-transparent'
+                }`}
+                title={m.name}
               >
-                <Icon size={20} />
-                {isSidebarOpen && <span className="font-medium">{m.name}</span>}
+                <Icon size={20} className={isActive ? 'text-indigo-400' : 'text-slate-400'} />
+                {isSidebarOpen && <span className="font-medium text-sm text-left truncate">{m.name}</span>}
               </button>
-            )
+            );
           })}
         </nav>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-screen z-10">
-        <header className="h-20 glass border-b border-slate-800/50 px-8 flex items-center">
-          <span className="text-indigo-400 font-medium bg-indigo-500/10 px-4 py-1.5 rounded-full border border-indigo-500/20 text-sm">
-            Modo Simplificado Activo
-          </span>
+      <main className="flex-1 flex flex-col h-screen z-10 overflow-hidden">
+        {/* Header Superior */}
+        <header className="h-20 glass border-b border-slate-800/50 px-6 md:px-8 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <h2 className="text-white font-bold text-lg hidden sm:block">
+              {activeModuleName}
+            </h2>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>MySQL: Finanzas_BD</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-400">Sector: Gastronomía & Alimentos</span>
+          </div>
         </header>
+
+        {/* Contenido Dinámico del Módulo */}
         <div className="flex-1 overflow-auto p-4 md:p-8 relative">
-          {activeModule === 'dashboard' ? <DashboardSimple /> : (
-            <div className="glass-panel rounded-2xl h-full flex items-center justify-center text-slate-500">
-              Contenido de Registro Rápido (Próximamente)
+          {activeModule === 'dashboard' && (
+            <DashboardSimple
+              dia={dia}
+              setDia={setDia}
+              monto={monto}
+              setMonto={setMonto}
+              tipo={tipo}
+              setTipo={setTipo}
+              agregarDato={agregarDato}
+              transacciones={transacciones}
+            />
+          )}
+
+          {activeModule === 'catalogo' && (
+            <CatalogoMateriaPrima />
+          )}
+
+          {activeModule !== 'dashboard' && activeModule !== 'catalogo' && (
+            <div className="glass-panel rounded-2xl h-full flex flex-col items-center justify-center text-slate-500 gap-3">
+              <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400">
+                <Package size={32} />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-300">Módulo de {activeModuleName}</h3>
+              <p className="text-sm text-slate-500 max-w-sm text-center">
+                Este módulo se conectará con la tabla correspondiente de la base de datos MySQL en las siguientes fases.
+              </p>
             </div>
           )}
         </div>
@@ -203,4 +270,3 @@ function App() {
 }
 
 export default App;
-
