@@ -116,7 +116,7 @@ function DashboardSimple({
 }
 
 function App() {
-  const [activeModule, setActiveModule] = useState('catalogo'); // Inicia en catálogo para visualización inmediata
+  const [activeModule, setActiveModule] = useState('catalogo'); 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const hoy = new Date().toISOString().split('T')[0];
@@ -137,7 +137,6 @@ function App() {
     const montoNum = Number(monto);
     if (isNaN(montoNum)) return;
     
-    // Clonación inmutable profunda
     let nuevosDatos = transacciones.map(t => ({ ...t }));
     const indexExistente = nuevosDatos.findIndex(t => t.fecha === dia);
 

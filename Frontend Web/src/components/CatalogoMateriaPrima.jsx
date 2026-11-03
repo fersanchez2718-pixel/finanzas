@@ -27,13 +27,11 @@ export default function CatalogoMateriaPrima() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Todos');
 
-  // Estado del modal de formulario
   const [modalOpen, setModalOpen] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [idEditando, setIdEditando] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
-  // Formulario
   const [formData, setFormData] = useState({
     nombre: '',
     unidad_medida: 'Kg',
@@ -42,11 +40,9 @@ export default function CatalogoMateriaPrima() {
     estado: 'Disponible'
   });
 
-  // Modal de confirmación de eliminación
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemAEliminar, setItemAEliminar] = useState(null);
 
-  // Notificación tipo toast
   const [toast, setToast] = useState(null);
 
   const showToast = (mensaje, tipo = 'success') => {
