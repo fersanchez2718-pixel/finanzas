@@ -9,6 +9,8 @@ const port = process.env.PORT || 3000;
 require('./config/db');
 const { seedMateriaPrima } = require('./utils/seed');
 const materiaPrimaRoutes = require('./routes/materiaPrima.routes');
+const inventarioRoutes = require('./routes/inventario.routes');
+const comprasRoutes = require('./routes/compras.routes');
 
 // Middleware
 app.use(cors());
@@ -20,6 +22,8 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/materia-prima', materiaPrimaRoutes);
+app.use('/api/inventario', inventarioRoutes);
+app.use('/api/compras', comprasRoutes);
 
 // Start Server & Seed Initial Data
 app.listen(port, async () => {

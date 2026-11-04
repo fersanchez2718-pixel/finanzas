@@ -127,7 +127,7 @@ export default function CatalogoMateriaPrima() {
 
       if (resData.success) {
         showToast(
-          modoEdicion ? '✓ Insumo culinario actualizado en MySQL' : '✓ Nuevo ingrediente guardado en MySQL',
+          modoEdicion ? 'Insumo actualizado exitosamente' : 'Ingrediente registrado exitosamente',
           'success'
         );
         setModalOpen(false);
@@ -204,7 +204,7 @@ export default function CatalogoMateriaPrima() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white tracking-tight">Catálogo de Materia Prima</h1>
-              <p className="text-slate-400 text-sm">Control y administración de ingredientes culinarios y stock de cocina (MySQL: Finanzas_BD)</p>
+              <p className="text-slate-400 text-sm">Control y catálogo maestro de insumos e ingredientes de cocina</p>
             </div>
           </div>
         </div>
@@ -338,7 +338,7 @@ export default function CatalogoMateriaPrima() {
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
             <RefreshCw size={28} className="animate-spin text-indigo-400" />
-            <p className="text-sm">Consultando base de datos MySQL...</p>
+            <p className="text-sm">Cargando catálogo de insumos...</p>
           </div>
         ) : error ? (
           <div className="py-16 px-6 text-center flex flex-col items-center justify-center gap-3">
@@ -625,7 +625,7 @@ export default function CatalogoMateriaPrima() {
                   {guardando ? (
                     <>
                       <RefreshCw size={16} className="animate-spin" />
-                      <span>Guardando en BD...</span>
+                      <span>Guardando...</span>
                     </>
                   ) : (
                     <span>{modoEdicion ? 'Actualizar Insumo' : 'Guardar Ingrediente'}</span>
@@ -646,7 +646,7 @@ export default function CatalogoMateriaPrima() {
             </div>
             <h3 className="text-lg font-bold text-white mb-2">¿Eliminar este insumo?</h3>
             <p className="text-slate-400 text-sm mb-6">
-              Estás a punto de eliminar <strong className="text-white">"{itemAEliminar.nombre}"</strong> de la base de datos MySQL. Esta acción no se puede deshacer.
+              Estás a punto de eliminar <strong className="text-white">"{itemAEliminar.nombre}"</strong> del catálogo. Esta acción no se puede deshacer.
             </p>
             <div className="flex items-center justify-center gap-3">
               <button

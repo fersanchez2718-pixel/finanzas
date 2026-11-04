@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CatalogoMateriaPrima from './components/CatalogoMateriaPrima';
+import GestionInventario from './components/GestionInventario';
+import RegistroCompras from './components/RegistroCompras';
 
 const modules = [
   { id: 'dashboard', name: 'Dashboard Central', icon: LayoutDashboard },
@@ -44,10 +46,10 @@ function DashboardSimple({
     <div className="w-full h-full flex flex-col gap-6 animation-fade-in">
       <div className="flex flex-col xl:flex-row gap-6">
 
-        {/* Formulario (Botones para ingresar datos) */}
+        {/* Formulario (Registro de Flujo) */}
         <div className="glass-panel rounded-2xl p-6 w-full xl:w-1/3">
-          <h2 className="text-xl font-bold text-white mb-4">Simulador de Movimientos</h2>
-          <p className="text-slate-400 text-sm mb-6">Ingresa datos aquí para ver cómo reacciona el gráfico en tiempo real.</p>
+          <h2 className="text-xl font-bold text-white mb-2">Registro de Flujo</h2>
+          <p className="text-slate-400 text-sm mb-6">Ingresa un movimiento para actualizar el balance financiero.</p>
 
           <form onSubmit={agregarDato} className="flex flex-col gap-4">
             <div>
@@ -85,14 +87,14 @@ function DashboardSimple({
               type="submit"
               className="mt-4 w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 active:scale-[0.98]"
             >
-              <Plus size={20} /> Ingresar al Gráfico
+              <Plus size={20} /> Registrar Movimiento
             </button>
           </form>
         </div>
 
         {/* Gráfico de Recharts */}
         <div className="glass-panel rounded-2xl p-6 w-full xl:w-2/3 min-h-[400px] flex flex-col">
-          <h2 className="text-xl font-bold text-white mb-6">Balance Financiero (En vivo)</h2>
+          <h2 className="text-xl font-bold text-white mb-6">Balance de Ingresos y Gastos</h2>
           <div className="flex-1 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={transacciones} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -175,9 +177,6 @@ function App() {
           {isSidebarOpen && (
             <div className="flex items-center gap-2 ml-2">
               <span className="font-bold text-xl text-white">Food<span className="text-orange-400">ERP</span></span>
-              <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">
-                PRO
-              </span>
             </div>
           )}
           <button 
@@ -221,14 +220,11 @@ function App() {
             <h2 className="text-white font-bold text-lg hidden sm:block">
               {activeModuleName}
             </h2>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>MySQL: Finanzas_BD</span>
-            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-400">Sector: Gastronomía & Alimentos</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Sistema en línea</span>
           </div>
         </header>
 
@@ -251,14 +247,22 @@ function App() {
             <CatalogoMateriaPrima />
           )}
 
-          {activeModule !== 'dashboard' && activeModule !== 'catalogo' && (
+          {activeModule === 'inventario' && (
+            <GestionInventario />
+          )}
+
+          {activeModule === 'compras' && (
+            <RegistroCompras />
+          )}
+
+          {!['dashboard', 'catalogo', 'inventario', 'compras'].includes(activeModule) && (
             <div className="glass-panel rounded-2xl h-full flex flex-col items-center justify-center text-slate-500 gap-3">
               <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400">
                 <Package size={32} />
               </div>
               <h3 className="text-lg font-semibold text-slate-300">Módulo de {activeModuleName}</h3>
               <p className="text-sm text-slate-500 max-w-sm text-center">
-                Este módulo se conectará con la tabla correspondiente de la base de datos MySQL en las siguientes fases.
+                Módulo en fase de integración para el control administrativo de la cocina.
               </p>
             </div>
           )}
