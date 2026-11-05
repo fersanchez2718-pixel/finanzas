@@ -1,23 +1,27 @@
-import React, { useState } from 'react';
-import { 
-  LayoutDashboard, 
-  Carrot, 
-  Package, 
-  ShoppingCart, 
-  Trash2, 
-  BadgeDollarSign, 
-  Receipt, 
-  Users, 
-  Contact2, 
+import React, { useState, useEffect } from 'react';
+import {
+  LayoutDashboard,
+  Carrot,
+  Package,
+  ShoppingCart,
+  Trash2,
+  BadgeDollarSign,
+  Receipt,
+  Users,
+  Contact2,
   UserCog,
   Menu,
   X,
-  Plus
+  Plus,
+  DollarSign,
+  TrendingUp
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CatalogoMateriaPrima from './components/CatalogoMateriaPrima';
 import GestionInventario from './components/GestionInventario';
 import RegistroCompras from './components/RegistroCompras';
+import RegistroVentas from './components/RegistroVentas';
+import ControlMermas from './components/ControlMermas';
 
 const modules = [
   { id: 'dashboard', name: 'Dashboard Central', icon: LayoutDashboard },
@@ -41,12 +45,68 @@ function DashboardSimple({
   setTipo,
   agregarDato,
   transacciones,
+  kpis,
+  cargarBalance
 }) {
   return (
-    <div className="w-full h-full flex flex-col gap-6 animation-fade-in">
-      <div className="flex flex-col xl:flex-row gap-6">
+    <div className="w-full h-full flex flex-col gap-6 animation-fade-in pb-8">
+      {/* 4 KPIs Financieros Consolidados */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-emerald-500">
+          <div>
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Ingresos por Ventas</p>
+            <h3 className="text-2xl font-extrabold text-white mt-1">
+              ${Number(kpis.totalIngresos).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </h3>
+            <p className="text-xs text-emerald-400 mt-1">Total recaudado</p>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+            <DollarSign size={24} />
+          </div>
+        </div>
 
-        {/* Formulario (Registro de Flujo) */}
+        <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-rose-500">
+          <div>
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Gastos en Compras</p>
+            <h3 className="text-2xl font-extrabold text-white mt-1">
+              ${Number(kpis.totalGastos).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </h3>
+            <p className="text-xs text-rose-400 mt-1">Total abastecimiento</p>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
+            <ShoppingCart size={24} />
+          </div>
+        </div>
+
+        <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-indigo-500">
+          <div>
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Utilidad Neta</p>
+            <h3 className={`text-2xl font-extrabold mt-1 ${kpis.utilidadNeta >= 0 ? 'text-indigo-400' : 'text-rose-400'}`}>
+              ${Number(kpis.utilidadNeta).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </h3>
+            <p className="text-xs text-indigo-300 mt-1">Margen final en caja</p>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+            <TrendingUp size={24} />
+          </div>
+        </div>
+
+        <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-purple-500">
+          <div>
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Margen Operativo</p>
+            <h3 className="text-2xl font-extrabold text-purple-400 mt-1">
+              {kpis.margen}%
+            </h3>
+            <p className="text-xs text-purple-300 mt-1">Rentabilidad sobre ventas</p>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+            <PercentBadge size={24} />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col xl:flex-row gap-6">
+        {/* Formulario (Registro de Flujo Rápido) */}
         <div className="glass-panel rounded-2xl p-6 w-full xl:w-1/3">
           <h2 className="text-xl font-bold text-white mb-2">Registro de Flujo</h2>
           <p className="text-slate-400 text-sm mb-6">Ingresa un movimiento para actualizar el balance financiero.</p>
@@ -94,7 +154,16 @@ function DashboardSimple({
 
         {/* Gráfico de Recharts */}
         <div className="glass-panel rounded-2xl p-6 w-full xl:w-2/3 min-h-[400px] flex flex-col">
-          <h2 className="text-xl font-bold text-white mb-6">Balance de Ingresos y Gastos</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white">Balance de Ingresos y Gastos</h2>
+            <button
+              type="button"
+              onClick={cargarBalance}
+              className="text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20 transition-colors"
+            >
+              Actualizar Gráfico
+            </button>
+          </div>
           <div className="flex-1 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={transacciones} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -117,16 +186,42 @@ function DashboardSimple({
   );
 }
 
+function PercentBadge() {
+  return (
+    <div className="font-extrabold text-sm font-mono">%</div>
+  );
+}
+
 function App() {
-  const [activeModule, setActiveModule] = useState('catalogo'); 
+  const [activeModule, setActiveModule] = useState('catalogo');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const hoy = new Date().toISOString().split('T')[0];
-  
-  const [transacciones, setTransacciones] = useState([
-    { fecha: '2026-10-01', ingresos: 4000, gastos: 2400 },
-    { fecha: '2026-10-05', ingresos: 3000, gastos: 1398 },
-  ]);
+
+  const [transacciones, setTransacciones] = useState([]);
+  const [kpisDashboard, setKpisDashboard] = useState({
+    totalIngresos: 0,
+    totalGastos: 0,
+    utilidadNeta: 0,
+    margen: 0
+  });
+
+  const cargarBalance = async () => {
+    try {
+      const res = await fetch('http://localhost:3000/api/dashboard/balance');
+      const data = await res.json();
+      if (data.success && data.transacciones) {
+        setTransacciones(data.transacciones);
+        setKpisDashboard(data.kpis);
+      }
+    } catch (e) {
+      console.error('Error al cargar balance del dashboard:', e);
+    }
+  };
+
+  useEffect(() => {
+    cargarBalance();
+  }, []);
 
   const [monto, setMonto] = useState('');
   const [tipo, setTipo] = useState('ingresos');
@@ -138,7 +233,7 @@ function App() {
 
     const montoNum = Number(monto);
     if (isNaN(montoNum)) return;
-    
+
     let nuevosDatos = transacciones.map(t => ({ ...t }));
     const indexExistente = nuevosDatos.findIndex(t => t.fecha === dia);
 
@@ -179,9 +274,9 @@ function App() {
               <span className="font-bold text-xl text-white">Food<span className="text-orange-400">ERP</span></span>
             </div>
           )}
-          <button 
-            type="button" 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 mx-auto transition-colors"
           >
             {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
@@ -197,11 +292,10 @@ function App() {
                 key={m.id}
                 type="button"
                 onClick={() => setActiveModule(m.id)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
-                  isActive 
-                    ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/25 shadow-lg shadow-indigo-500/10' 
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${isActive
+                    ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/25 shadow-lg shadow-indigo-500/10'
                     : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border border-transparent'
-                }`}
+                  }`}
                 title={m.name}
               >
                 <Icon size={20} className={isActive ? 'text-indigo-400' : 'text-slate-400'} />
@@ -240,6 +334,8 @@ function App() {
               setTipo={setTipo}
               agregarDato={agregarDato}
               transacciones={transacciones}
+              kpis={kpisDashboard}
+              cargarBalance={cargarBalance}
             />
           )}
 
@@ -255,7 +351,15 @@ function App() {
             <RegistroCompras />
           )}
 
-          {!['dashboard', 'catalogo', 'inventario', 'compras'].includes(activeModule) && (
+          {activeModule === 'mermas' && (
+            <ControlMermas />
+          )}
+
+          {activeModule === 'ventas' && (
+            <RegistroVentas />
+          )}
+
+          {!['dashboard', 'catalogo', 'inventario', 'compras', 'mermas', 'ventas'].includes(activeModule) && (
             <div className="glass-panel rounded-2xl h-full flex flex-col items-center justify-center text-slate-500 gap-3">
               <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400">
                 <Package size={32} />

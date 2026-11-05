@@ -349,7 +349,6 @@ export default function RegistroCompras() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-700/60 bg-slate-900/40 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  <th className="py-3.5 px-4"># Compra</th>
                   <th className="py-3.5 px-4">Fecha</th>
                   <th className="py-3.5 px-4">Insumo Adquirido</th>
                   <th className="py-3.5 px-4 text-right">Cantidad Comprada</th>
@@ -367,10 +366,6 @@ export default function RegistroCompras() {
 
                   return (
                     <tr key={item.id_compra} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3.5 px-4 text-slate-500 font-mono text-xs">
-                        #{item.id_compra}
-                      </td>
-
                       <td className="py-3.5 px-4 font-mono text-xs text-slate-300">
                         {item.fecha_compra}
                       </td>
@@ -572,7 +567,7 @@ export default function RegistroCompras() {
             </div>
             <h3 className="text-lg font-bold text-white mb-2">¿Anular esta compra?</h3>
             <p className="text-slate-400 text-sm mb-6">
-              Estás a punto de anular la compra #{compraAEliminar.id_compra} de <strong className="text-white">{compraAEliminar.nombre_materia_prima}</strong>. 
+              Estás a punto de anular la compra de <strong className="text-white">{compraAEliminar.nombre_materia_prima}</strong> del {compraAEliminar.fecha_compra}. 
               <br /><br />
               <span className="text-rose-400 font-medium">Se descontarán {compraAEliminar.cantidad} {compraAEliminar.unidad_medida} del inventario actual.</span>
             </p>

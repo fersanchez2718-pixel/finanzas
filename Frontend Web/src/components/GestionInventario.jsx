@@ -317,7 +317,6 @@ export default function GestionInventario() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-700/60 bg-slate-900/40 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  <th className="py-3.5 px-4"># ID</th>
                   <th className="py-3.5 px-4">Insumo</th>
                   <th className="py-3.5 px-4">Unidad</th>
                   <th className="py-3.5 px-4 text-center w-48">Nivel de Stock</th>
@@ -339,10 +338,6 @@ export default function GestionInventario() {
 
                   return (
                     <tr key={item.id_materia_prima} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3.5 px-4 text-slate-500 font-mono text-xs">
-                        #{item.id_materia_prima}
-                      </td>
-
                       <td className="py-3.5 px-4 font-semibold text-white">
                         {item.nombre}
                       </td>

@@ -13,6 +13,15 @@ const insumosIniciales = [
   { nombre: 'Papas a la Francesa Corte Recto', unidad_medida: 'Kg', cantidad_disponible: 30.00, costo_unitario: 45.00, estado: 'Disponible' },
 ];
 
+const productosIniciales = [
+  { nombre_producto: 'Hamburguesa Clásica con Queso', descripcion: 'Carne 150g, queso cheddar, lechuga y tomate en pan brioche', precio: 120.00, estado: 'Disponible' },
+  { nombre_producto: 'Hamburguesa Doble Tocino', descripcion: 'Doble carne 300g, tocino crocante, queso cheddar y aderezo especial', precio: 165.00, estado: 'Disponible' },
+  { nombre_producto: 'Orden de Boneless BBQ (300g)', descripcion: 'Pechuga de pollo empanizada en salsa BBQ con papas', precio: 140.00, estado: 'Disponible' },
+  { nombre_producto: 'Papas a la Francesa Corte Recto', descripcion: 'Papas doradas crujientes con queso cheddar y tocino', precio: 65.00, estado: 'Disponible' },
+  { nombre_producto: 'Refresco de Lata (355ml)', descripcion: 'Variedad de sabores (Coca Cola, Sprite, Fanta)', precio: 30.00, estado: 'Disponible' },
+  { nombre_producto: 'Agua Fresca Artesanal (1 Litro)', descripcion: 'Agua de fruta natural del día', precio: 35.00, estado: 'Disponible' }
+];
+
 const seedMateriaPrima = async () => {
   try {
     const [rows] = await pool.query('SELECT COUNT(*) as total FROM MATERIA_PRIMA');
@@ -26,8 +35,21 @@ const seedMateriaPrima = async () => {
       }
       console.log('✓ 10 Insumos culinarios insertados exitosamente en MATERIA_PRIMA.');
     }
+
+    // Sembrar productos / menú si está vacío
+    const [prodRows] = await pool.query('SELECT COUNT(*) as total FROM PRODUCTOS');
+    if (prodRows[0].total === 0) {
+      console.log('Sembrando menú de platillos en PRODUCTOS...');
+      for (const prod of productosIniciales) {
+        await pool.query(
+          'INSERT INTO PRODUCTOS (nombre_producto, descripcion, precio, estado) VALUES (?, ?, ?, ?)',
+          [prod.nombre_producto, prod.descripcion, prod.precio, prod.estado]
+        );
+      }
+      console.log('✓ Menú inicial de platillos insertado en PRODUCTOS.');
+    }
   } catch (error) {
-    console.error('Error al verificar o sembrar materia prima:', error);
+    console.error('Error al verificar o sembrar datos:', error);
   }
 };
 

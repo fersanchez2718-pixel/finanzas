@@ -49,3 +49,66 @@
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(71, 85, 105, 0.5);
 }
+
+/* Reglas Estrictas de Impresión / PDF */
+@media print {
+  /* Ocultar todo el sitio web: sidebar, navbar, fondo, botones */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Hacer visible exclusivamente la hoja de reporte */
+  #reporte-venta-imprimible,
+  #reporte-venta-imprimible * {
+    visibility: visible !important;
+  }
+
+  #reporte-venta-imprimible {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 16px 24px !important;
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    z-index: 999999 !important;
+  }
+
+  /* Ocultar botones dentro del reporte */
+  .no-print,
+  .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Estilos para papel: texto nítido y tablas limpias */
+  #reporte-venta-imprimible table {
+    width: 100% !important;
+    color: #111827 !important;
+    border-collapse: collapse !important;
+  }
+
+  #reporte-venta-imprimible th {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+    border-bottom: 2px solid #e5e7eb !important;
+  }
+
+  #reporte-venta-imprimible td {
+    color: #1f2937 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
+  html, body {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
+
