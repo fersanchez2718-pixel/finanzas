@@ -57,13 +57,16 @@
     visibility: hidden !important;
   }
 
-  /* Hacer visible exclusivamente la hoja de reporte */
+  /* Hacer visible exclusivamente la hoja de reporte o recibo */
   #reporte-venta-imprimible,
-  #reporte-venta-imprimible * {
+  #reporte-venta-imprimible *,
+  #recibo-nomina-imprimible,
+  #recibo-nomina-imprimible * {
     visibility: visible !important;
   }
 
-  #reporte-venta-imprimible {
+  #reporte-venta-imprimible,
+  #recibo-nomina-imprimible {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;

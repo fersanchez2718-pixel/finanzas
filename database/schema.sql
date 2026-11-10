@@ -149,3 +149,54 @@ CREATE TABLE DESPERDICIOS (
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
+
+-- =========================================================
+-- Tabla: GASTOS_OPERATIVOS
+-- Registro de egresos fijos y variables del local (servicios, renta, insumos de limpieza, etc.)
+-- =========================================================
+CREATE TABLE IF NOT EXISTS GASTOS_OPERATIVOS (
+    id_gasto               INT AUTO_INCREMENT PRIMARY KEY,
+    concepto               VARCHAR(150) NOT NULL,
+    categoria              VARCHAR(60) NOT NULL,
+    monto                  DECIMAL(10,2) NOT NULL,
+    fecha_gasto            DATE NOT NULL,
+    metodo_pago            VARCHAR(50) NOT NULL,
+    comprobante_referencia VARCHAR(100),
+    notas                  TEXT,
+    created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================================================
+-- Tabla: PROVEEDORES
+-- Directorio de proveedores de insumos culinarios, empaques y servicios
+-- =========================================================
+CREATE TABLE IF NOT EXISTS PROVEEDORES (
+    id_proveedor           INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_comercial       VARCHAR(150) NOT NULL,
+    razon_social           VARCHAR(150),
+    contacto_nombre        VARCHAR(120),
+    telefono               VARCHAR(30) NOT NULL,
+    email                  VARCHAR(120),
+    direccion              VARCHAR(255),
+    categoria_suministro   VARCHAR(80) NOT NULL,
+    dias_entrega           VARCHAR(100),
+    estado                 VARCHAR(30) DEFAULT 'Activo',
+    notas                  TEXT,
+    created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================================================
+-- Tabla: USUARIOS
+-- Cuentas de usuario y perfiles de acceso
+-- =========================================================
+CREATE TABLE IF NOT EXISTS USUARIOS (
+    id_usuario             INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_completo        VARCHAR(150) NOT NULL,
+    username               VARCHAR(60) NOT NULL UNIQUE,
+    email                  VARCHAR(120) NOT NULL UNIQUE,
+    password_hash          VARCHAR(255) NOT NULL,
+    rol                    VARCHAR(50) DEFAULT 'Cajero',
+    estado                 VARCHAR(30) DEFAULT 'Activo',
+    ultimo_acceso          DATETIME,
+    created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -280,7 +280,7 @@ const remove = async (req, res) => {
 // Obtener datos resumidos para el reporte ejecutivo
 const getReporte = async (req, res) => {
   try {
-    const { fecha_inicio, fecha_fin } = req.query;
+    const { fecha_inicio, fecha_fin, metodo_pago } = req.query;
 
     let whereClause = 'WHERE 1=1';
     const params = [];
@@ -292,6 +292,10 @@ const getReporte = async (req, res) => {
     if (fecha_fin) {
       whereClause += ' AND v.fecha_venta <= ?';
       params.push(fecha_fin);
+    }
+    if (metodo_pago && metodo_pago !== 'Todos') {
+      whereClause += ' AND v.metodo_pago = ?';
+      params.push(metodo_pago);
     }
 
     // Totales generales
@@ -317,6 +321,10 @@ const getReporte = async (req, res) => {
       whereDetalle += ' AND v.fecha_venta <= ?';
       paramsDetalle.push(fecha_fin);
     }
+    if (metodo_pago && metodo_pago !== 'Todos') {
+      whereDetalle += ' AND v.metodo_pago = ?';
+      paramsDetalle.push(metodo_pago);
+    }
 
     const [topProductos] = await pool.query(
       `SELECT p.nombre_producto, SUM(d.cantidad) as total_vendido, SUM(d.subtotal) as ingresos_generados
@@ -330,13 +338,61 @@ const getReporte = async (req, res) => {
       paramsDetalle
     );
 
+    // Listado de ventas en el período para la tabla del reporte
+    const [ventasRows] = await pool.query(
+      `SELECT 
+        v.id_venta,
+        DATE_FORMAT(v.fecha_venta, '%Y-%m-%d') as fecha_venta,
+        v.total,
+        v.metodo_pago
+      FROM VENTAS v
+      ${whereClause}
+      ORDER BY v.fecha_venta DESC, v.id_venta DESC`,
+      params
+    );
+
+    let ventasConDetalle = [];
+    if (ventasRows.length > 0) {
+      const idsVentas = ventasRows.map(v => v.id_venta);
+      const [detallesRows] = await pool.query(
+        `SELECT 
+          d.id_detalle,
+          d.id_venta,
+          d.id_producto,
+          d.cantidad,
+          d.precio_unitario,
+          d.subtotal,
+          p.nombre_producto
+         FROM DETALLE_VENTA d
+         JOIN PRODUCTOS p ON d.id_producto = p.id_producto
+         WHERE d.id_venta IN (?)
+         ORDER BY d.id_detalle ASC`,
+        [idsVentas]
+      );
+
+      const detallesPorVenta = {};
+      detallesRows.forEach(det => {
+        if (!detallesPorVenta[det.id_venta]) {
+          detallesPorVenta[det.id_venta] = [];
+        }
+        detallesPorVenta[det.id_venta].push(det);
+      });
+
+      ventasConDetalle = ventasRows.map(v => ({
+        ...v,
+        detalles: detallesPorVenta[v.id_venta] || []
+      }));
+    }
+
     res.json({
       success: true,
       reporte: {
-        rango: { fecha_inicio: fecha_inicio || 'Inicio', fecha_fin: fecha_fin || 'Presente' },
+        rango: { fecha_inicio: fecha_inicio || null, fecha_fin: fecha_fin || null },
+        metodo_pago: metodo_pago || 'Todos',
         resumen: totales[0],
         metodos,
-        topProductos
+        topProductos,
+        ventas: ventasConDetalle
       }
     });
   } catch (error) {

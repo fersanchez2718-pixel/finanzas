@@ -22,6 +22,10 @@ import GestionInventario from './components/GestionInventario';
 import RegistroCompras from './components/RegistroCompras';
 import RegistroVentas from './components/RegistroVentas';
 import ControlMermas from './components/ControlMermas';
+import GastosOperativos from './components/GastosOperativos';
+import NominaSueldos from './components/NominaSueldos';
+import DirectorioProveedores from './components/DirectorioProveedores';
+import AdministracionUsuarios from './components/AdministracionUsuarios';
 
 const modules = [
   { id: 'dashboard', name: 'Dashboard Central', icon: LayoutDashboard },
@@ -67,14 +71,14 @@ function DashboardSimple({
 
         <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-rose-500">
           <div>
-            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Gastos en Compras</p>
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Egresos Totales</p>
             <h3 className="text-2xl font-extrabold text-white mt-1">
               ${Number(kpis.totalGastos).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h3>
-            <p className="text-xs text-rose-400 mt-1">Total abastecimiento</p>
+            <p className="text-xs text-rose-400 mt-1">Compras y gastos del local</p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
-            <ShoppingCart size={24} />
+            <Receipt size={24} />
           </div>
         </div>
 
@@ -359,16 +363,20 @@ function App() {
             <RegistroVentas />
           )}
 
-          {!['dashboard', 'catalogo', 'inventario', 'compras', 'mermas', 'ventas'].includes(activeModule) && (
-            <div className="glass-panel rounded-2xl h-full flex flex-col items-center justify-center text-slate-500 gap-3">
-              <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400">
-                <Package size={32} />
-              </div>
-              <h3 className="text-lg font-semibold text-slate-300">Módulo de {activeModuleName}</h3>
-              <p className="text-sm text-slate-500 max-w-sm text-center">
-                Módulo en fase de integración para el control administrativo de la cocina.
-              </p>
-            </div>
+          {activeModule === 'gastos' && (
+            <GastosOperativos />
+          )}
+
+          {activeModule === 'nomina' && (
+            <NominaSueldos />
+          )}
+
+          {activeModule === 'proveedores' && (
+            <DirectorioProveedores />
+          )}
+
+          {activeModule === 'usuarios' && (
+            <AdministracionUsuarios />
           )}
         </div>
       </main>
