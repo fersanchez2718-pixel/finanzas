@@ -1,8 +1,9 @@
 const pool = require('../config/db');
 
-// Obtener historial de compras con métricas
+// Obtener historial de compras con métricas para el usuario
 const getAll = async (req, res) => {
   try {
+    const userId = req.userId;
     const { busqueda, mes, anio } = req.query;
 
     let query = `
@@ -18,9 +19,9 @@ const getAll = async (req, res) => {
         m.cantidad_disponible AS stock_actual_insumo
       FROM COMPRAS_MATERIA_PRIMA c
       JOIN MATERIA_PRIMA m ON c.id_materia_prima = m.id_materia_prima
-      WHERE 1=1
+      WHERE c.id_usuario = ?
     `;
-    const params = [];
+    const params = [userId];
 
     if (busqueda) {
       query += ' AND m.nombre LIKE ?';
@@ -72,6 +73,7 @@ const getAll = async (req, res) => {
 const create = async (req, res) => {
   let connection;
   try {
+    const userId = req.userId;
     const { id_materia_prima, fecha_compra, cantidad, costo_total } = req.body;
 
     if (!id_materia_prima || !fecha_compra || cantidad === undefined || costo_total === undefined) {
@@ -91,14 +93,13 @@ const create = async (req, res) => {
       });
     }
 
-    // Usar transacción para consistencia
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // 1. Verificar insumo
+    // 1. Verificar insumo del usuario
     const [insumo] = await connection.query(
-      'SELECT id_materia_prima, nombre, cantidad_disponible, costo_unitario FROM MATERIA_PRIMA WHERE id_materia_prima = ? FOR UPDATE',
-      [id_materia_prima]
+      'SELECT id_materia_prima, nombre, cantidad_disponible, costo_unitario FROM MATERIA_PRIMA WHERE id_materia_prima = ? AND id_usuario = ? FOR UPDATE',
+      [id_materia_prima, userId]
     );
 
     if (insumo.length === 0) {
@@ -106,10 +107,10 @@ const create = async (req, res) => {
       return res.status(404).json({ success: false, message: 'El insumo seleccionado no existe' });
     }
 
-    // 2. Insertar compra
+    // 2. Insertar compra con id_usuario
     const [resultCompra] = await connection.query(
-      'INSERT INTO COMPRAS_MATERIA_PRIMA (id_materia_prima, fecha_compra, cantidad, costo_total) VALUES (?, ?, ?, ?)',
-      [id_materia_prima, fecha_compra, cantNum, costoNum]
+      'INSERT INTO COMPRAS_MATERIA_PRIMA (id_materia_prima, fecha_compra, cantidad, costo_total, id_usuario) VALUES (?, ?, ?, ?, ?)',
+      [id_materia_prima, fecha_compra, cantNum, costoNum, userId]
     );
 
     // 3. Incrementar stock y recalcular estado
@@ -118,8 +119,8 @@ const create = async (req, res) => {
     const nuevoEstado = nuevoStock > 5 ? 'Disponible' : nuevoStock > 0 ? 'Stock Bajo' : 'Agotado';
 
     await connection.query(
-      'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ?',
-      [nuevoStock, nuevoEstado, id_materia_prima]
+      'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
+      [nuevoStock, nuevoEstado, id_materia_prima, userId]
     );
 
     await connection.commit();
@@ -151,6 +152,7 @@ const create = async (req, res) => {
 const remove = async (req, res) => {
   let connection;
   try {
+    const userId = req.userId;
     const { id } = req.params;
 
     connection = await pool.getConnection();
@@ -158,8 +160,8 @@ const remove = async (req, res) => {
 
     // 1. Obtener datos de la compra a anular
     const [compra] = await connection.query(
-      'SELECT id_compra, id_materia_prima, cantidad FROM COMPRAS_MATERIA_PRIMA WHERE id_compra = ? FOR UPDATE',
-      [id]
+      'SELECT id_compra, id_materia_prima, cantidad FROM COMPRAS_MATERIA_PRIMA WHERE id_compra = ? AND id_usuario = ? FOR UPDATE',
+      [id, userId]
     );
 
     if (compra.length === 0) {
@@ -171,12 +173,12 @@ const remove = async (req, res) => {
     const cantNum = parseFloat(cantidad);
 
     // 2. Eliminar compra
-    await connection.query('DELETE FROM COMPRAS_MATERIA_PRIMA WHERE id_compra = ?', [id]);
+    await connection.query('DELETE FROM COMPRAS_MATERIA_PRIMA WHERE id_compra = ? AND id_usuario = ?', [id, userId]);
 
-    // 3. Revertir stock en MATERIA_PRIMA (sin permitir negativos)
+    // 3. Revertir stock en MATERIA_PRIMA
     const [insumo] = await connection.query(
-      'SELECT cantidad_disponible, nombre FROM MATERIA_PRIMA WHERE id_materia_prima = ? FOR UPDATE',
-      [id_materia_prima]
+      'SELECT cantidad_disponible, nombre FROM MATERIA_PRIMA WHERE id_materia_prima = ? AND id_usuario = ? FOR UPDATE',
+      [id_materia_prima, userId]
     );
 
     if (insumo.length > 0) {
@@ -185,8 +187,8 @@ const remove = async (req, res) => {
       const nuevoEstado = stockRevertido > 5 ? 'Disponible' : stockRevertido > 0 ? 'Stock Bajo' : 'Agotado';
 
       await connection.query(
-        'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ?',
-        [stockRevertido, nuevoEstado, id_materia_prima]
+        'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
+        [stockRevertido, nuevoEstado, id_materia_prima, userId]
       );
     }
 
@@ -210,4 +212,3 @@ module.exports = {
   create,
   remove
 };
-

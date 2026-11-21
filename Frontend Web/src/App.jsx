@@ -14,9 +14,22 @@ import {
   X,
   Plus,
   DollarSign,
-  TrendingUp
+  TrendingUp,
+  Sun,
+  Moon,
+  LogOut,
+  LogIn,
+  UserPlus,
+  Shield,
+  Sparkles,
+  Store
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useAuth } from './context/AuthContext';
+import { useTheme } from './context/ThemeContext';
+import LoginScreen from './components/LoginScreen';
+import AuthModal from './components/AuthModal';
+
 import CatalogoMateriaPrima from './components/CatalogoMateriaPrima';
 import GestionInventario from './components/GestionInventario';
 import RegistroCompras from './components/RegistroCompras';
@@ -37,7 +50,7 @@ const modules = [
   { id: 'gastos', name: 'Gastos Operativos', icon: Receipt },
   { id: 'nomina', name: 'Nómina y Sueldos', icon: Users },
   { id: 'proveedores', name: 'Directorio de Proveedores', icon: Contact2 },
-  { id: 'usuarios', name: 'Administración de Usuarios', icon: UserCog },
+  { id: 'usuarios', name: 'Configuración & Usuarios', icon: UserCog },
 ];
 
 function DashboardSimple({
@@ -54,17 +67,17 @@ function DashboardSimple({
 }) {
   return (
     <div className="w-full h-full flex flex-col gap-6 animation-fade-in pb-8">
-      {/* 4 KPIs Financieros Consolidados */}
+      {/* 4 KPIs Financieros Consolidados con Acento NVIDIA */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-emerald-500">
+        <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-[#76B900]">
           <div>
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Ingresos por Ventas</p>
-            <h3 className="text-2xl font-extrabold text-white mt-1">
+            <h3 className="text-2xl font-black text-white mt-1">
               ${Number(kpis.totalIngresos).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h3>
-            <p className="text-xs text-emerald-400 mt-1">Total recaudado</p>
+            <p className="text-xs text-[#76B900] mt-1">Total recaudado</p>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-[#76B900]/15 text-[#76B900] flex items-center justify-center shadow-[0_0_15px_rgba(118,185,0,0.2)]">
             <DollarSign size={24} />
           </div>
         </div>
@@ -72,39 +85,39 @@ function DashboardSimple({
         <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-rose-500">
           <div>
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Egresos Totales</p>
-            <h3 className="text-2xl font-extrabold text-white mt-1">
+            <h3 className="text-2xl font-black text-white mt-1">
               ${Number(kpis.totalGastos).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h3>
-            <p className="text-xs text-rose-400 mt-1">Compras y gastos del local</p>
+            <p className="text-xs text-rose-400 mt-1">Compras, nómina y gastos</p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
             <Receipt size={24} />
           </div>
         </div>
 
-        <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-indigo-500">
+        <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-[#76B900]">
           <div>
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Utilidad Neta</p>
-            <h3 className={`text-2xl font-extrabold mt-1 ${kpis.utilidadNeta >= 0 ? 'text-indigo-400' : 'text-rose-400'}`}>
+            <h3 className={`text-2xl font-black mt-1 ${kpis.utilidadNeta >= 0 ? 'text-[#76B900]' : 'text-rose-400'}`}>
               ${Number(kpis.utilidadNeta).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h3>
-            <p className="text-xs text-indigo-300 mt-1">Margen final en caja</p>
+            <p className="text-xs text-slate-400 mt-1">Margen final en caja</p>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-[#76B900]/15 text-[#76B900] flex items-center justify-center shadow-[0_0_15px_rgba(118,185,0,0.2)]">
             <TrendingUp size={24} />
           </div>
         </div>
 
-        <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-purple-500">
+        <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-emerald-500">
           <div>
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Margen Operativo</p>
-            <h3 className="text-2xl font-extrabold text-purple-400 mt-1">
+            <h3 className="text-2xl font-black text-emerald-400 mt-1">
               {kpis.margen}%
             </h3>
-            <p className="text-xs text-purple-300 mt-1">Rentabilidad sobre ventas</p>
+            <p className="text-xs text-emerald-300 mt-1">Rentabilidad sobre ventas</p>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
-            <PercentBadge size={24} />
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-extrabold text-sm font-mono">
+            %
           </div>
         </div>
       </div>
@@ -122,7 +135,7 @@ function DashboardSimple({
                 type="date"
                 value={dia}
                 onChange={(e) => setDia(e.target.value)}
-                className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-white focus:border-indigo-500 outline-none transition-colors [color-scheme:dark]"
+                className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-white focus:border-[#76B900] outline-none transition-colors [color-scheme:dark]"
               />
             </div>
             <div>
@@ -131,7 +144,7 @@ function DashboardSimple({
                 type="number"
                 value={monto}
                 onChange={(e) => setMonto(e.target.value)}
-                className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-white focus:border-indigo-500 outline-none transition-colors"
+                className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-white focus:border-[#76B900] outline-none transition-colors"
                 placeholder="0.00"
               />
             </div>
@@ -140,7 +153,7 @@ function DashboardSimple({
               <select
                 value={tipo}
                 onChange={(e) => setTipo(e.target.value)}
-                className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-white focus:border-indigo-500 outline-none transition-colors"
+                className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-white focus:border-[#76B900] outline-none transition-colors"
               >
                 <option value="ingresos">Ingreso (Venta)</option>
                 <option value="gastos">Gasto (Merma/Pago)</option>
@@ -149,7 +162,7 @@ function DashboardSimple({
 
             <button
               type="submit"
-              className="mt-4 w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 active:scale-[0.98]"
+              className="mt-4 w-full bg-[#76B900] hover:bg-[#86CE00] text-black font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(118,185,0,0.35)] active:scale-[0.98] cursor-pointer"
             >
               <Plus size={20} /> Registrar Movimiento
             </button>
@@ -163,7 +176,7 @@ function DashboardSimple({
             <button
               type="button"
               onClick={cargarBalance}
-              className="text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20 transition-colors"
+              className="text-xs text-[#76B900] hover:text-[#86CE00] bg-[#76B900]/10 px-3 py-1.5 rounded-lg border border-[#76B900]/30 transition-colors cursor-pointer"
             >
               Actualizar Gráfico
             </button>
@@ -175,30 +188,35 @@ function DashboardSimple({
                 <XAxis dataKey="fecha" stroke="#64748b" tick={{ fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis stroke="#64748b" tick={{ fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#fff' }}
+                  contentStyle={{ backgroundColor: '#080B10', borderColor: '#76B900', borderRadius: '12px', color: '#fff', boxShadow: '0 0 20px rgba(118,185,0,0.2)' }}
                   itemStyle={{ color: '#fff' }}
                 />
-                <Line type="monotone" dataKey="ingresos" name="Ingresos" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="ingresos" name="Ingresos" stroke="#76B900" strokeWidth={3} dot={{ r: 4, fill: '#76B900', strokeWidth: 0 }} activeDot={{ r: 6 }} />
                 <Line type="monotone" dataKey="gastos" name="Gastos" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4, fill: '#f43f5e', strokeWidth: 0 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
-
       </div>
     </div>
   );
 }
 
-function PercentBadge() {
-  return (
-    <div className="font-extrabold text-sm font-mono">%</div>
-  );
-}
-
 function App() {
-  const [activeModule, setActiveModule] = useState('catalogo');
+  const { user, isAuthenticated, logout } = useAuth();
+  const { theme, toggleTheme, isDark } = useTheme();
+
+  // Si no ha iniciado sesión, mostrar directamente la ventana de inicio de sesión o registro
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
+  const [activeModule, setActiveModule] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Modal de autenticación
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState('login');
 
   const hoy = new Date().toISOString().split('T')[0];
 
@@ -225,7 +243,7 @@ function App() {
 
   useEffect(() => {
     cargarBalance();
-  }, []);
+  }, [user]);
 
   const [monto, setMonto] = useState('');
   const [tipo, setTipo] = useState('ingresos');
@@ -264,24 +282,28 @@ function App() {
   const activeModuleName = modules.find(m => m.id === activeModule)?.name || 'Finanzas y Control';
 
   return (
-    <div className="min-h-screen bg-[#0b1121] flex overflow-hidden">
-      {/* Background gradients */}
+    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex overflow-hidden transition-colors duration-300">
+      {/* Background glow effects estilo NVIDIA */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/10 blur-[120px]" />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#76B900]/5 blur-[140px]" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-900/10 blur-[140px]" />
       </div>
 
-      {/* Sidebar de Navegación */}
-      <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} glass border-r border-slate-800/50 z-20 transition-all duration-300 flex flex-col`}>
-        <div className="h-20 flex items-center justify-between px-4 border-b border-slate-800/50">
+      {/* Sidebar de Navegación con Acentos NVIDIA */}
+      <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} glass border-r border-[var(--border-card)] z-20 transition-all duration-300 flex flex-col`}>
+        <div className="h-20 flex items-center justify-between px-4 border-b border-[var(--border-card)]">
           {isSidebarOpen && (
             <div className="flex items-center gap-2 ml-2">
-              <span className="font-bold text-xl text-white">Food<span className="text-orange-400">ERP</span></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#76B900] shadow-[0_0_8px_#76B900]" />
+              <span className="font-black text-xl tracking-tight">
+                Food<span className="text-[#76B900]">ERP</span>
+              </span>
             </div>
           )}
           <button
             type="button"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 mx-auto transition-colors"
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 mx-auto transition-colors cursor-pointer"
           >
             {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -296,33 +318,114 @@ function App() {
                 key={m.id}
                 type="button"
                 onClick={() => setActiveModule(m.id)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${isActive
-                    ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/25 shadow-lg shadow-indigo-500/10'
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 cursor-pointer ${
+                  isActive
+                    ? 'bg-[#76B900]/15 text-[#76B900] border border-[#76B900]/30 shadow-[0_0_15px_rgba(118,185,0,0.15)] font-bold'
                     : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border border-transparent'
-                  }`}
+                }`}
                 title={m.name}
               >
-                <Icon size={20} className={isActive ? 'text-indigo-400' : 'text-slate-400'} />
-                {isSidebarOpen && <span className="font-medium text-sm text-left truncate">{m.name}</span>}
+                <Icon size={20} className={isActive ? 'text-[#76B900]' : 'text-slate-400'} />
+                {isSidebarOpen && <span className="text-sm text-left truncate">{m.name}</span>}
               </button>
             );
           })}
         </nav>
       </aside>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen z-10 overflow-hidden">
-        {/* Header Superior */}
-        <header className="h-20 glass border-b border-slate-800/50 px-6 md:px-8 flex items-center justify-between shrink-0">
+        {/* Header Superior con Perfil, Negocio y Conmutador de Temas */}
+        <header className="h-20 glass border-b border-[var(--border-card)] px-6 md:px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <h2 className="text-white font-bold text-lg hidden sm:block">
+            <h2 className="font-bold text-lg hidden sm:block">
               {activeModuleName}
             </h2>
+            <div className="hidden lg:flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+              <span>•</span>
+              <Store size={14} className="text-[#76B900]" />
+              <span className="text-slate-300 font-semibold">{user?.nombre_negocio || 'FoodERP Restaurant & Gourmet'}</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Sistema en línea</span>
+          <div className="flex items-center gap-3">
+            {/* Conmutador de Tema (Modo Claro / Oscuro) */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-2.5 rounded-xl border border-slate-700/60 hover:border-[#76B900]/60 bg-slate-900/40 hover:bg-slate-800 text-slate-300 hover:text-[#76B900] transition-all cursor-pointer shadow-sm"
+              title={isDark ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'}
+            >
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
+            {/* Estado de Conexión */}
+            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#76B900]/10 border border-[#76B900]/25 text-xs text-[#76B900] font-semibold">
+              <span className="w-2 h-2 rounded-full bg-[#76B900] animate-pulse"></span>
+              <span>Sistema en Línea</span>
+            </div>
+
+            {/* Usuario Autenticado / Botón de Login */}
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveModule('usuarios')}
+                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-700/60 bg-slate-900/40 hover:border-[#76B900]/40 transition-all text-left cursor-pointer"
+                  title="Configurar Perfil y Temas"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-[#76B900] text-black font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(118,185,0,0.4)]">
+                    {user?.nombre_completo?.charAt(0) || 'U'}
+                  </div>
+                  <div className="hidden sm:block">
+                    <div className="text-xs font-bold text-white leading-tight truncate max-w-[140px]">
+                      {user?.nombre_completo}
+                    </div>
+                    <div className="text-[10px] text-[#76B900] leading-none mt-0.5">
+                      {user?.rol || 'Administrador'}
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    cargarBalance();
+                  }}
+                  className="p-2.5 rounded-xl border border-slate-700/60 hover:border-rose-500/50 bg-slate-900/40 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-all cursor-pointer"
+                  title="Cerrar Sesión"
+                >
+                  <LogOut size={17} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthModalTab('login');
+                    setAuthModalOpen(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[#76B900] hover:bg-[#86CE00] text-black shadow-[0_0_15px_rgba(118,185,0,0.35)] transition-all cursor-pointer active:scale-95"
+                >
+                  <LogIn size={15} />
+                  <span>Iniciar Sesión</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthModalTab('register');
+                    setAuthModalOpen(true);
+                  }}
+                  className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-700 hover:border-[#76B900]/60 bg-slate-900/40 text-slate-200 transition-all cursor-pointer"
+                >
+                  <UserPlus size={15} className="text-[#76B900]" />
+                  <span>Crear Cuenta en Ceros</span>
+                </button>
+              </div>
+            )}
           </div>
         </header>
 
@@ -380,6 +483,16 @@ function App() {
           )}
         </div>
       </main>
+
+      {/* Modal de Autenticación (Login / Registro en Ceros) */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => {
+          setAuthModalOpen(false);
+          cargarBalance();
+        }}
+        defaultTab={authModalTab}
+      />
     </div>
   );
 }

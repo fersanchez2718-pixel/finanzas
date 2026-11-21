@@ -3,6 +3,7 @@ const pool = require('../config/db');
 // Obtener todos los gastos operativos con filtros y resumen analítico
 const getAll = async (req, res) => {
   try {
+    const userId = req.userId;
     const { fecha_inicio, fecha_fin, categoria } = req.query;
 
     let query = `
@@ -17,9 +18,9 @@ const getAll = async (req, res) => {
         notas,
         created_at
       FROM GASTOS_OPERATIVOS
-      WHERE 1=1
+      WHERE id_usuario = ?
     `;
-    const params = [];
+    const params = [userId];
 
     if (fecha_inicio) {
       query += ' AND fecha_gasto >= ?';
@@ -74,6 +75,7 @@ const getAll = async (req, res) => {
 // Registrar un nuevo gasto operativo
 const create = async (req, res) => {
   try {
+    const userId = req.userId;
     const { concepto, categoria, monto, fecha_gasto, metodo_pago, comprobante_referencia, notas } = req.body;
 
     if (!concepto || !categoria || monto === undefined || !fecha_gasto || !metodo_pago) {
@@ -93,8 +95,8 @@ const create = async (req, res) => {
 
     const [result] = await pool.query(
       `INSERT INTO GASTOS_OPERATIVOS 
-        (concepto, categoria, monto, fecha_gasto, metodo_pago, comprobante_referencia, notas) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        (concepto, categoria, monto, fecha_gasto, metodo_pago, comprobante_referencia, notas, id_usuario) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         concepto.trim(),
         categoria.trim(),
@@ -102,7 +104,8 @@ const create = async (req, res) => {
         fecha_gasto,
         metodo_pago.trim(),
         comprobante_referencia ? comprobante_referencia.trim() : null,
-        notas ? notas.trim() : null
+        notas ? notas.trim() : null,
+        userId
       ]
     );
 
@@ -120,6 +123,7 @@ const create = async (req, res) => {
 // Actualizar un gasto operativo existente
 const update = async (req, res) => {
   try {
+    const userId = req.userId;
     const { id } = req.params;
     const { concepto, categoria, monto, fecha_gasto, metodo_pago, comprobante_referencia, notas } = req.body;
 
@@ -138,7 +142,7 @@ const update = async (req, res) => {
       });
     }
 
-    const [existente] = await pool.query('SELECT id_gasto FROM GASTOS_OPERATIVOS WHERE id_gasto = ?', [id]);
+    const [existente] = await pool.query('SELECT id_gasto FROM GASTOS_OPERATIVOS WHERE id_gasto = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Registro de gasto no encontrado' });
     }
@@ -146,7 +150,7 @@ const update = async (req, res) => {
     await pool.query(
       `UPDATE GASTOS_OPERATIVOS 
        SET concepto = ?, categoria = ?, monto = ?, fecha_gasto = ?, metodo_pago = ?, comprobante_referencia = ?, notas = ?
-       WHERE id_gasto = ?`,
+       WHERE id_gasto = ? AND id_usuario = ?`,
       [
         concepto.trim(),
         categoria.trim(),
@@ -155,7 +159,8 @@ const update = async (req, res) => {
         metodo_pago.trim(),
         comprobante_referencia ? comprobante_referencia.trim() : null,
         notas ? notas.trim() : null,
-        id
+        id,
+        userId
       ]
     );
 
@@ -172,14 +177,15 @@ const update = async (req, res) => {
 // Eliminar / anular un gasto operativo
 const remove = async (req, res) => {
   try {
+    const userId = req.userId;
     const { id } = req.params;
 
-    const [existente] = await pool.query('SELECT id_gasto FROM GASTOS_OPERATIVOS WHERE id_gasto = ?', [id]);
+    const [existente] = await pool.query('SELECT id_gasto FROM GASTOS_OPERATIVOS WHERE id_gasto = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'El gasto a eliminar no existe' });
     }
 
-    await pool.query('DELETE FROM GASTOS_OPERATIVOS WHERE id_gasto = ?', [id]);
+    await pool.query('DELETE FROM GASTOS_OPERATIVOS WHERE id_gasto = ? AND id_usuario = ?', [id, userId]);
 
     res.json({
       success: true,
@@ -197,4 +203,3 @@ module.exports = {
   update,
   remove
 };
-

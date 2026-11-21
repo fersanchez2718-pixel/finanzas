@@ -1,8 +1,9 @@
 const pool = require('../config/db');
 
-// Obtener todas las ventas con su desglose de platillos
+// Obtener todas las ventas con su desglose de platillos para el usuario
 const getAll = async (req, res) => {
   try {
+    const userId = req.userId;
     const { fecha_inicio, fecha_fin, metodo_pago } = req.query;
 
     let queryVentas = `
@@ -12,9 +13,9 @@ const getAll = async (req, res) => {
         v.total,
         v.metodo_pago
       FROM VENTAS v
-      WHERE 1=1
+      WHERE v.id_usuario = ?
     `;
-    const params = [];
+    const params = [userId];
 
     if (fecha_inicio) {
       queryVentas += ' AND v.fecha_venta >= ?';
@@ -120,6 +121,7 @@ const getAll = async (req, res) => {
 const create = async (req, res) => {
   let connection;
   try {
+    const userId = req.userId;
     const { fecha_venta, metodo_pago, items } = req.body;
 
     if (!fecha_venta || !metodo_pago || !items || !Array.isArray(items) || items.length === 0) {
@@ -143,10 +145,10 @@ const create = async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // 1. Insertar venta
+    // 1. Insertar venta asociada al id_usuario
     const [resultVenta] = await connection.query(
-      'INSERT INTO VENTAS (fecha_venta, total, metodo_pago) VALUES (?, ?, ?)',
-      [fecha_venta, totalCalculado, metodo_pago]
+      'INSERT INTO VENTAS (fecha_venta, total, metodo_pago, id_usuario) VALUES (?, ?, ?, ?)',
+      [fecha_venta, totalCalculado, metodo_pago, userId]
     );
 
     const idVenta = resultVenta.insertId;
@@ -188,6 +190,7 @@ const create = async (req, res) => {
 const update = async (req, res) => {
   let connection;
   try {
+    const userId = req.userId;
     const { id } = req.params;
     const { fecha_venta, metodo_pago, items } = req.body;
 
@@ -212,8 +215,8 @@ const update = async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // 1. Verificar existencia
-    const [existente] = await connection.query('SELECT id_venta FROM VENTAS WHERE id_venta = ? FOR UPDATE', [id]);
+    // 1. Verificar existencia para este usuario
+    const [existente] = await connection.query('SELECT id_venta FROM VENTAS WHERE id_venta = ? AND id_usuario = ? FOR UPDATE', [id, userId]);
     if (existente.length === 0) {
       await connection.rollback();
       return res.status(404).json({ success: false, message: 'La venta que intentas modificar no existe' });
@@ -221,8 +224,8 @@ const update = async (req, res) => {
 
     // 2. Actualizar cabecera de la venta
     await connection.query(
-      'UPDATE VENTAS SET fecha_venta = ?, total = ?, metodo_pago = ? WHERE id_venta = ?',
-      [fecha_venta, totalCalculado, metodo_pago, id]
+      'UPDATE VENTAS SET fecha_venta = ?, total = ?, metodo_pago = ? WHERE id_venta = ? AND id_usuario = ?',
+      [fecha_venta, totalCalculado, metodo_pago, id, userId]
     );
 
     // 3. Eliminar partidas anteriores y reinsertar las actualizadas
@@ -263,8 +266,9 @@ const update = async (req, res) => {
 // Eliminar / anular una venta
 const remove = async (req, res) => {
   try {
+    const userId = req.userId;
     const { id } = req.params;
-    const [result] = await pool.query('DELETE FROM VENTAS WHERE id_venta = ?', [id]);
+    const [result] = await pool.query('DELETE FROM VENTAS WHERE id_venta = ? AND id_usuario = ?', [id, userId]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Venta no encontrada' });
@@ -280,10 +284,11 @@ const remove = async (req, res) => {
 // Obtener datos resumidos para el reporte ejecutivo
 const getReporte = async (req, res) => {
   try {
+    const userId = req.userId;
     const { fecha_inicio, fecha_fin, metodo_pago } = req.query;
 
-    let whereClause = 'WHERE 1=1';
-    const params = [];
+    let whereClause = 'WHERE v.id_usuario = ?';
+    const params = [userId];
 
     if (fecha_inicio) {
       whereClause += ' AND v.fecha_venta >= ?';
@@ -311,8 +316,8 @@ const getReporte = async (req, res) => {
     );
 
     // Platillos más vendidos
-    let whereDetalle = 'WHERE 1=1';
-    const paramsDetalle = [];
+    let whereDetalle = 'WHERE v.id_usuario = ?';
+    const paramsDetalle = [userId];
     if (fecha_inicio) {
       whereDetalle += ' AND v.fecha_venta >= ?';
       paramsDetalle.push(fecha_inicio);
@@ -408,4 +413,3 @@ module.exports = {
   remove,
   getReporte
 };
-

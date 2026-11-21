@@ -216,15 +216,24 @@ const seedMateriaPrima = async () => {
       CREATE TABLE IF NOT EXISTS USUARIOS (
         id_usuario INT AUTO_INCREMENT PRIMARY KEY,
         nombre_completo VARCHAR(150) NOT NULL,
+        nombre_negocio VARCHAR(150) DEFAULT 'FoodERP Restaurant',
         username VARCHAR(60) NOT NULL UNIQUE,
         email VARCHAR(120) NOT NULL UNIQUE,
         password_hash VARCHAR(255) NOT NULL,
-        rol VARCHAR(50) DEFAULT 'Cajero',
+        rol VARCHAR(50) DEFAULT 'Administrador',
         estado VARCHAR(30) DEFAULT 'Activo',
+        tema_preferido VARCHAR(30) DEFAULT 'nvidia-dark',
         ultimo_acceso DATETIME,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    try {
+      await pool.query('ALTER TABLE USUARIOS ADD COLUMN nombre_negocio VARCHAR(150) DEFAULT "FoodERP Restaurant"');
+    } catch (e) {}
+    try {
+      await pool.query('ALTER TABLE USUARIOS ADD COLUMN tema_preferido VARCHAR(30) DEFAULT "nvidia-dark"');
+    } catch (e) {}
 
     // Sembrar usuarios iniciales si está vacío
     const [userRows] = await pool.query('SELECT COUNT(*) as total FROM USUARIOS');
@@ -232,12 +241,61 @@ const seedMateriaPrima = async () => {
       console.log('Sembrando cuentas de usuario iniciales...');
       for (const u of usuariosIniciales) {
         await pool.query(
-          'INSERT INTO USUARIOS (nombre_completo, username, email, password_hash, rol, estado) VALUES (?, ?, ?, ?, ?, ?)',
-          [u.nombre_completo, u.username, u.email, u.password_hash, u.rol, u.estado]
+          'INSERT INTO USUARIOS (nombre_completo, username, email, password_hash, rol, estado, nombre_negocio, tema_preferido) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [u.nombre_completo, u.username, u.email, u.password_hash, u.rol, u.estado, 'FoodERP Restaurant', 'nvidia-dark']
         );
       }
       console.log('✓ 3 Usuarios iniciales creados en USUARIOS.');
     }
+
+    // Asegurar la cuenta maestra de Fernando Ramírez y migrar datos
+    let idFernando = null;
+    const [fernandoUser] = await pool.query('SELECT id_usuario FROM USUARIOS WHERE email = ?', ['fernandoramirez@gmail.com']);
+    if (fernandoUser.length > 0) {
+      idFernando = fernandoUser[0].id_usuario;
+    } else {
+      console.log('Creando cuenta principal de Fernando Ramírez...');
+      const [insertFernando] = await pool.query(
+        `INSERT INTO USUARIOS (nombre_completo, nombre_negocio, username, email, password_hash, rol, estado, tema_preferido) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          'Fernando Ramírez',
+          'FoodERP Restaurant & Gourmet',
+          'fernandoramirez',
+          'fernandoramirez@gmail.com',
+          hashPwd('Admin123!'),
+          'Administrador',
+          'Activo',
+          'nvidia-dark'
+        ]
+      );
+      idFernando = insertFernando.insertId;
+      console.log(`✓ Cuenta principal creada: fernandoramirez@gmail.com (ID: ${idFernando})`);
+    }
+
+    // Asegurar columna id_usuario en todas las tablas y migrar registros existentes a Fernando
+    const tablasTenant = [
+      'MATERIA_PRIMA',
+      'PRODUCTOS',
+      'VENTAS',
+      'COMPRAS_MATERIA_PRIMA',
+      'DESPERDICIOS',
+      'GASTOS_OPERATIVOS',
+      'EMPLEADOS',
+      'PAGOS_EMPLEADOS',
+      'PROVEEDORES'
+    ];
+
+    for (const tabla of tablasTenant) {
+      try {
+        await pool.query(`ALTER TABLE ${tabla} ADD COLUMN id_usuario INT`);
+      } catch (e) {}
+
+      if (idFernando) {
+        await pool.query(`UPDATE ${tabla} SET id_usuario = ? WHERE id_usuario IS NULL OR id_usuario = 0`, [idFernando]);
+      }
+    }
+    console.log(`✓ Migración multi-tenant completada: datos vinculados al usuario ID ${idFernando} (fernandoramirez@gmail.com)`);
   } catch (error) {
     console.error('Error al verificar o sembrar datos:', error);
   }

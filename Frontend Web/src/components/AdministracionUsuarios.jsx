@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ConfiguracionUsuario from './ConfiguracionUsuario';
 import {
   UserCog,
   Plus,
@@ -19,12 +20,14 @@ import {
   Lock,
   User,
   SlidersHorizontal,
-  ShieldAlert
+  ShieldAlert,
+  Palette
 } from 'lucide-react';
 
 const API_USUARIOS = 'http://localhost:3000/api/usuarios';
 
 export default function AdministracionUsuarios() {
+  const [activeTab, setActiveTab] = useState('configuracion'); // 'configuracion' | 'personal'
   const [usuarios, setUsuarios] = useState([]);
   const [resumen, setResumen] = useState({
     totalUsuarios: 0,
@@ -226,37 +229,70 @@ export default function AdministracionUsuarios() {
         </div>
       )}
 
-      {/* Encabezado */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-            <UserCog className="text-purple-400" size={32} />
-            Administración de Usuarios
-          </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Control de cuentas de acceso, roles operativos y permisos internos del sistema
-          </p>
-        </div>
+      {/* Selector de Submódulos: Configuración vs Gestión de Usuarios */}
+      <div className="flex flex-wrap items-center gap-3 border-b border-slate-800 pb-4">
+        <button
+          type="button"
+          onClick={() => setActiveTab('configuracion')}
+          className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+            activeTab === 'configuracion'
+              ? 'bg-[#76B900] text-black shadow-[0_0_15px_rgba(118,185,0,0.35)]'
+              : 'text-slate-400 hover:text-white bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800'
+          }`}
+        >
+          <UserCog size={18} />
+          <span>Configuración de Cuenta & Estilo NVIDIA</span>
+        </button>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={cargarUsuarios}
-            className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
-            title="Refrescar usuarios"
-          >
-            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-          </button>
-          <button
-            type="button"
-            onClick={abrirModalCrear}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-lg shadow-purple-600/30 hover:shadow-purple-600/50 transition-all active:scale-95 text-sm cursor-pointer"
-          >
-            <Plus size={18} />
-            <span>Crear Usuario</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setActiveTab('personal')}
+          className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+            activeTab === 'personal'
+              ? 'bg-[#76B900] text-black shadow-[0_0_15px_rgba(118,185,0,0.35)]'
+              : 'text-slate-400 hover:text-white bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800'
+          }`}
+        >
+          <ShieldCheck size={18} />
+          <span>Personal y Accesos del Sistema</span>
+        </button>
       </div>
+
+      {activeTab === 'configuracion' ? (
+        <ConfiguracionUsuario />
+      ) : (
+        <>
+          {/* Encabezado */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+                <UserCog className="text-[#76B900]" size={32} />
+                Gestión de Personal & Roles
+              </h1>
+              <p className="text-slate-400 text-sm mt-1">
+                Control de cuentas operativas, cajeros y permisos asignados en el restaurante
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={cargarUsuarios}
+                className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
+                title="Refrescar usuarios"
+              >
+                <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+              </button>
+              <button
+                type="button"
+                onClick={abrirModalCrear}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-[#76B900] hover:bg-[#86CE00] text-black rounded-xl font-bold shadow-[0_0_15px_rgba(118,185,0,0.35)] transition-all active:scale-95 text-sm cursor-pointer"
+              >
+                <Plus size={18} />
+                <span>Crear Usuario Operativo</span>
+              </button>
+            </div>
+          </div>
 
       {/* KPIs Ejecutivos de Cuentas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -435,6 +471,8 @@ export default function AdministracionUsuarios() {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* Modal Crear / Editar Usuario */}
       {modalOpen && (

@@ -1,27 +1,108 @@
 @import "tailwindcss";
 
+:root {
+  --nv-green: #76B900;
+  --nv-green-hover: #86CE00;
+  --nv-green-glow: rgba(118, 185, 0, 0.35);
+  --bg-app: #080B10;
+  --bg-card: rgba(14, 20, 31, 0.85);
+  --border-card: rgba(118, 185, 0, 0.22);
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+}
+
+[data-theme="nvidia-light"] {
+  --bg-app: #F1F4F9;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --border-card: #CBD5E1;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+}
+
 @layer base {
   body {
-    background-color: #0f172a;
-    color: #e2e8f0;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
     font-family: ui-sans-serif, system-ui, sans-serif;
     margin: 0;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   
   ::selection {
-    background-color: #6366f1;
-    color: white;
+    background-color: #76B900;
+    color: #000000;
   }
 }
 
-/* Glassmorphism utilities */
+/* Glassmorphism utilities adaptable to NVIDIA Dark and Light */
 @layer components {
   .glass {
-    @apply bg-slate-900/50 backdrop-blur-md border border-slate-800/50;
+    background-color: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-card);
+    transition: all 0.3s ease;
   }
   .glass-panel {
-    @apply bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 shadow-2xl;
+    background-color: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-card);
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.25);
+    transition: all 0.3s ease;
   }
+  .nvidia-btn {
+    background-color: #76B900;
+    color: #000000;
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(118, 185, 0, 0.35);
+    transition: all 0.2s ease;
+  }
+  .nvidia-btn:hover {
+    background-color: #86CE00;
+    box-shadow: 0 0 25px rgba(118, 185, 0, 0.5);
+  }
+}
+
+/* Reglas de Adaptación Modo Claro (NVIDIA Light Studio) */
+[data-theme="nvidia-light"] .glass-panel {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="nvidia-light"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="nvidia-light"] select,
+[data-theme="nvidia-light"] textarea {
+  color: #0F172A !important;
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+}
+
+[data-theme="nvidia-light"] input::placeholder,
+[data-theme="nvidia-light"] textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+[data-theme="nvidia-light"] .text-white {
+  color: #0F172A !important;
+}
+
+[data-theme="nvidia-light"] .text-slate-300,
+[data-theme="nvidia-light"] .text-slate-200 {
+  color: #334155 !important;
+}
+
+[data-theme="nvidia-light"] .text-slate-400 {
+  color: #64748B !important;
+}
+
+[data-theme="nvidia-light"] .bg-slate-900\/50,
+[data-theme="nvidia-light"] .bg-slate-900\/60,
+[data-theme="nvidia-light"] .bg-slate-900\/40,
+[data-theme="nvidia-light"] .bg-slate-900\/80,
+[data-theme="nvidia-light"] .bg-slate-900,
+[data-theme="nvidia-light"] .bg-slate-800\/40,
+[data-theme="nvidia-light"] .bg-slate-800\/50,
+[data-theme="nvidia-light"] .bg-slate-800 {
+  background-color: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
 }
 
 /* Animations */
@@ -43,11 +124,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(51, 65, 85, 0.5);
+  background-color: rgba(118, 185, 0, 0.3);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(71, 85, 105, 0.5);
+  background-color: rgba(118, 185, 0, 0.6);
 }
 
 /* Reglas Estrictas de Impresión / PDF */
@@ -90,28 +171,23 @@
   }
 
   /* Estilos para papel: texto nítido y tablas limpias */
-  #reporte-venta-imprimible table {
+  #reporte-venta-imprimible table,
+  #recibo-nomina-imprimible table {
     width: 100% !important;
     color: #111827 !important;
     border-collapse: collapse !important;
   }
 
-  #reporte-venta-imprimible th {
+  #reporte-venta-imprimible th,
+  #recibo-nomina-imprimible th {
     background-color: #f3f4f6 !important;
     color: #111827 !important;
     border-bottom: 2px solid #e5e7eb !important;
   }
 
-  #reporte-venta-imprimible td {
-    color: #1f2937 !important;
+  #reporte-venta-imprimible td,
+  #recibo-nomina-imprimible td {
     border-bottom: 1px solid #e5e7eb !important;
-  }
-
-  html, body {
-    background-color: #ffffff !important;
     color: #111827 !important;
-    overflow: visible !important;
-    height: auto !important;
   }
 }
-

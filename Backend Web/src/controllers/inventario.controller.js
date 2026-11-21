@@ -1,11 +1,12 @@
 const pool = require('../config/db');
 
-// Obtener estado general del inventario
+// Obtener estado general del inventario para el usuario autenticado
 const getInventario = async (req, res) => {
   try {
+    const userId = req.userId;
     const { busqueda, estado } = req.query;
-    let query = 'SELECT * FROM MATERIA_PRIMA WHERE 1=1';
-    const params = [];
+    let query = 'SELECT * FROM MATERIA_PRIMA WHERE id_usuario = ?';
+    const params = [userId];
 
     if (busqueda) {
       query += ' AND nombre LIKE ?';
@@ -68,6 +69,7 @@ const getInventario = async (req, res) => {
 // Ajustar existencias de stock
 const ajustarStock = async (req, res) => {
   try {
+    const userId = req.userId;
     const { id } = req.params;
     const { tipo_ajuste, cantidad, motivo } = req.body;
 
@@ -76,7 +78,7 @@ const ajustarStock = async (req, res) => {
       return res.status(400).json({ success: false, message: 'La cantidad debe ser un número positivo válido' });
     }
 
-    const [rows] = await pool.query('SELECT * FROM MATERIA_PRIMA WHERE id_materia_prima = ?', [id]);
+    const [rows] = await pool.query('SELECT * FROM MATERIA_PRIMA WHERE id_materia_prima = ? AND id_usuario = ?', [id, userId]);
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Insumo no encontrado' });
     }
@@ -103,19 +105,21 @@ const ajustarStock = async (req, res) => {
     }
 
     await pool.query(
-      'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ?',
-      [nuevaCantidad, nuevoEstado, id]
+      'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
+      [nuevaCantidad, nuevoEstado, id, userId]
     );
 
     res.json({
       success: true,
-      message: `Stock ajustado correctamente (${motivo || 'Ajuste operativo'})`,
+      message: `Stock ajustado correctamente. Nuevo saldo: ${nuevaCantidad} ${actual.unidad_medida}`,
       data: {
         id_materia_prima: actual.id_materia_prima,
         nombre: actual.nombre,
-        cantidad_anterior: actual.cantidad_disponible,
-        cantidad_nueva: nuevaCantidad,
-        estado: nuevoEstado
+        cantidad_anterior: parseFloat(actual.cantidad_disponible),
+        nueva_cantidad: nuevaCantidad,
+        unidad_medida: actual.unidad_medida,
+        estado: nuevoEstado,
+        motivo: motivo || 'Ajuste manual de inventario'
       }
     });
   } catch (error) {
@@ -128,4 +132,3 @@ module.exports = {
   getInventario,
   ajustarStock
 };
-

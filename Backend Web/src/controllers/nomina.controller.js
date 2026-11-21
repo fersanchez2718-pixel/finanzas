@@ -4,9 +4,10 @@ const pool = require('../config/db');
 // CONTROLADOR DE EMPLEADOS
 // ==========================================
 
-// Obtener todos los colaboradores
+// Obtener todos los colaboradores del usuario
 const getEmpleados = async (req, res) => {
   try {
+    const userId = req.userId;
     const { estado } = req.query;
     let query = `
       SELECT 
@@ -19,9 +20,9 @@ const getEmpleados = async (req, res) => {
         COALESCE(estado, 'Activo') as estado,
         experiencia_laboral
       FROM EMPLEADOS
-      WHERE 1=1
+      WHERE id_usuario = ?
     `;
-    const params = [];
+    const params = [userId];
 
     if (estado && estado !== 'Todos') {
       query += ' AND COALESCE(estado, "Activo") = ?';
@@ -45,6 +46,7 @@ const getEmpleados = async (req, res) => {
 // Crear nuevo empleado
 const createEmpleado = async (req, res) => {
   try {
+    const userId = req.userId;
     const { nombre, puesto, telefono, sueldo_diario, fecha_ingreso, estado, experiencia_laboral } = req.body;
 
     if (!nombre || sueldo_diario === undefined || !fecha_ingreso) {
@@ -64,8 +66,8 @@ const createEmpleado = async (req, res) => {
 
     const [result] = await pool.query(
       `INSERT INTO EMPLEADOS 
-        (nombre, puesto, telefono, sueldo_diario, fecha_ingreso, estado, experiencia_laboral) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        (nombre, puesto, telefono, sueldo_diario, fecha_ingreso, estado, experiencia_laboral, id_usuario) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         nombre.trim(),
         puesto ? puesto.trim() : 'General',
@@ -73,7 +75,8 @@ const createEmpleado = async (req, res) => {
         sueldoNum,
         fecha_ingreso,
         estado || 'Activo',
-        experiencia_laboral ? experiencia_laboral.trim() : null
+        experiencia_laboral ? experiencia_laboral.trim() : null,
+        userId
       ]
     );
 
@@ -91,6 +94,7 @@ const createEmpleado = async (req, res) => {
 // Actualizar datos del empleado
 const updateEmpleado = async (req, res) => {
   try {
+    const userId = req.userId;
     const { id } = req.params;
     const { nombre, puesto, telefono, sueldo_diario, fecha_ingreso, estado, experiencia_laboral } = req.body;
 
@@ -109,10 +113,15 @@ const updateEmpleado = async (req, res) => {
       });
     }
 
+    const [existente] = await pool.query('SELECT id_empleado FROM EMPLEADOS WHERE id_empleado = ? AND id_usuario = ?', [id, userId]);
+    if (existente.length === 0) {
+      return res.status(404).json({ success: false, message: 'Colaborador no encontrado' });
+    }
+
     await pool.query(
       `UPDATE EMPLEADOS 
        SET nombre = ?, puesto = ?, telefono = ?, sueldo_diario = ?, fecha_ingreso = ?, estado = ?, experiencia_laboral = ?
-       WHERE id_empleado = ?`,
+       WHERE id_empleado = ? AND id_usuario = ?`,
       [
         nombre.trim(),
         puesto ? puesto.trim() : 'General',
@@ -121,7 +130,8 @@ const updateEmpleado = async (req, res) => {
         fecha_ingreso,
         estado || 'Activo',
         experiencia_laboral ? experiencia_laboral.trim() : null,
-        id
+        id,
+        userId
       ]
     );
 
@@ -138,14 +148,15 @@ const updateEmpleado = async (req, res) => {
 // Eliminar / dar de baja empleado
 const removeEmpleado = async (req, res) => {
   try {
+    const userId = req.userId;
     const { id } = req.params;
 
-    const [existente] = await pool.query('SELECT id_empleado FROM EMPLEADOS WHERE id_empleado = ?', [id]);
+    const [existente] = await pool.query('SELECT id_empleado FROM EMPLEADOS WHERE id_empleado = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Colaborador no encontrado' });
     }
 
-    await pool.query('DELETE FROM EMPLEADOS WHERE id_empleado = ?', [id]);
+    await pool.query('DELETE FROM EMPLEADOS WHERE id_empleado = ? AND id_usuario = ?', [id, userId]);
 
     res.json({
       success: true,
@@ -157,7 +168,6 @@ const removeEmpleado = async (req, res) => {
   }
 };
 
-
 // ==========================================
 // CONTROLADOR DE PAGOS DE NÓMINA
 // ==========================================
@@ -165,6 +175,7 @@ const removeEmpleado = async (req, res) => {
 // Consultar pagos de nómina históricos con datos del empleado
 const getPagos = async (req, res) => {
   try {
+    const userId = req.userId;
     const { fecha_inicio, fecha_fin, id_empleado } = req.query;
 
     let query = `
@@ -184,9 +195,9 @@ const getPagos = async (req, res) => {
         p.notas
       FROM PAGOS_EMPLEADOS p
       JOIN EMPLEADOS e ON p.id_empleado = e.id_empleado
-      WHERE 1=1
+      WHERE p.id_usuario = ?
     `;
-    const params = [];
+    const params = [userId];
 
     if (fecha_inicio) {
       query += ' AND p.fecha_pago >= ?';
@@ -227,6 +238,7 @@ const getPagos = async (req, res) => {
 // Registrar dispersión de pago a un empleado
 const createPago = async (req, res) => {
   try {
+    const userId = req.userId;
     const { id_empleado, fecha_pago, periodo, dias_trabajados, sueldo_diario, bonos, deducciones, metodo_pago, notas } = req.body;
 
     if (!id_empleado || !fecha_pago || !periodo || dias_trabajados === undefined || sueldo_diario === undefined || !metodo_pago) {
@@ -248,14 +260,20 @@ const createPago = async (req, res) => {
       });
     }
 
+    // Validar que el empleado pertenezca al usuario
+    const [empCheck] = await pool.query('SELECT id_empleado FROM EMPLEADOS WHERE id_empleado = ? AND id_usuario = ?', [id_empleado, userId]);
+    if (empCheck.length === 0) {
+      return res.status(404).json({ success: false, message: 'Empleado no encontrado' });
+    }
+
     // Calcular total automáticamente: (dias * sueldo) + bonos - deducciones
     const subtotal = dias * sueldo;
     const totalCalculado = Math.max(0, subtotal + bonosNum - deduccionesNum);
 
     const [result] = await pool.query(
       `INSERT INTO PAGOS_EMPLEADOS 
-        (id_empleado, fecha_pago, periodo, dias_trabajados, sueldo_diario, bonos, deducciones, total_pagado, metodo_pago, notas) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id_empleado, fecha_pago, periodo, dias_trabajados, sueldo_diario, bonos, deducciones, total_pagado, metodo_pago, notas, id_usuario) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id_empleado,
         fecha_pago,
@@ -266,7 +284,8 @@ const createPago = async (req, res) => {
         deduccionesNum,
         totalCalculado,
         metodo_pago.trim(),
-        notas ? notas.trim() : null
+        notas ? notas.trim() : null,
+        userId
       ]
     );
 
@@ -285,14 +304,15 @@ const createPago = async (req, res) => {
 // Anular pago de nómina
 const removePago = async (req, res) => {
   try {
+    const userId = req.userId;
     const { id } = req.params;
 
-    const [existente] = await pool.query('SELECT id_pago FROM PAGOS_EMPLEADOS WHERE id_pago = ?', [id]);
+    const [existente] = await pool.query('SELECT id_pago FROM PAGOS_EMPLEADOS WHERE id_pago = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Recibo de nómina no encontrado' });
     }
 
-    await pool.query('DELETE FROM PAGOS_EMPLEADOS WHERE id_pago = ?', [id]);
+    await pool.query('DELETE FROM PAGOS_EMPLEADOS WHERE id_pago = ? AND id_usuario = ?', [id, userId]);
 
     res.json({
       success: true,
@@ -307,12 +327,15 @@ const removePago = async (req, res) => {
 // Resumen general para la cabecera de Nómina
 const getResumenNomina = async (req, res) => {
   try {
+    const userId = req.userId;
     const [empRows] = await pool.query(
-      'SELECT COUNT(*) as total_empleados, SUM(CASE WHEN estado = "Activo" THEN 1 ELSE 0 END) as empleados_activos, SUM(CASE WHEN estado = "Activo" THEN sueldo_diario ELSE 0 END) as costo_diario_plantilla FROM EMPLEADOS'
+      'SELECT COUNT(*) as total_empleados, SUM(CASE WHEN estado = "Activo" THEN 1 ELSE 0 END) as empleados_activos, SUM(CASE WHEN estado = "Activo" THEN sueldo_diario ELSE 0 END) as costo_diario_plantilla FROM EMPLEADOS WHERE id_usuario = ?',
+      [userId]
     );
 
     const [pagoRows] = await pool.query(
-      'SELECT COALESCE(SUM(total_pagado), 0) as total_historico, COUNT(*) as total_recibos FROM PAGOS_EMPLEADOS'
+      'SELECT COALESCE(SUM(total_pagado), 0) as total_historico, COUNT(*) as total_recibos FROM PAGOS_EMPLEADOS WHERE id_usuario = ?',
+      [userId]
     );
 
     const empData = empRows[0] || {};
@@ -326,7 +349,7 @@ const getResumenNomina = async (req, res) => {
         totalEmpleados: parseInt(empData.total_empleados || 0, 10),
         empleadosActivos: parseInt(empData.empleados_activos || 0, 10),
         costoDiarioPlantilla: costoDiario,
-        costoSemanalProyectado: costoDiario * 6, // 6 días laborables estándar de cocina
+        costoSemanalProyectado: costoDiario * 6,
         costoMensualProyectado: costoDiario * 24,
         totalDispersadoHistorico: parseFloat(pagoData.total_historico || 0),
         totalRecibosEmitidos: parseInt(pagoData.total_recibos || 0, 10)
@@ -348,4 +371,3 @@ module.exports = {
   removePago,
   getResumenNomina
 };
-

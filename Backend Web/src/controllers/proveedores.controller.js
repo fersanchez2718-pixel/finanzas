@@ -1,8 +1,9 @@
 const pool = require('../config/db');
 
-// Obtener todos los proveedores
+// Obtener todos los proveedores del usuario
 const getAll = async (req, res) => {
   try {
+    const userId = req.userId;
     const { categoria, estado, busqueda } = req.query;
 
     let query = `
@@ -20,9 +21,9 @@ const getAll = async (req, res) => {
         COALESCE(notas, '') as notas,
         created_at
       FROM PROVEEDORES
-      WHERE 1=1
+      WHERE id_usuario = ?
     `;
-    const params = [];
+    const params = [userId];
 
     if (categoria && categoria !== 'Todas') {
       query += ' AND categoria_suministro = ?';
@@ -50,7 +51,9 @@ const getAll = async (req, res) => {
         COUNT(*) as total_proveedores,
         SUM(CASE WHEN estado = 'Activo' THEN 1 ELSE 0 END) as proveedores_activos,
         COUNT(DISTINCT categoria_suministro) as total_categorias
-       FROM PROVEEDORES`
+       FROM PROVEEDORES
+       WHERE id_usuario = ?`,
+      [userId]
     );
 
     res.json({
@@ -67,6 +70,7 @@ const getAll = async (req, res) => {
 // Registrar nuevo proveedor
 const create = async (req, res) => {
   try {
+    const userId = req.userId;
     const { nombre_comercial, razon_social, contacto_nombre, telefono, email, direccion, categoria_suministro, dias_entrega, estado, notas } = req.body;
 
     if (!nombre_comercial || !telefono || !categoria_suministro) {
@@ -78,8 +82,8 @@ const create = async (req, res) => {
 
     const [result] = await pool.query(
       `INSERT INTO PROVEEDORES 
-        (nombre_comercial, razon_social, contacto_nombre, telefono, email, direccion, categoria_suministro, dias_entrega, estado, notas) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (nombre_comercial, razon_social, contacto_nombre, telefono, email, direccion, categoria_suministro, dias_entrega, estado, notas, id_usuario) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         nombre_comercial.trim(),
         razon_social ? razon_social.trim() : null,
@@ -90,7 +94,8 @@ const create = async (req, res) => {
         categoria_suministro.trim(),
         dias_entrega ? dias_entrega.trim() : 'Bajo Pedido',
         estado || 'Activo',
-        notas ? notas.trim() : null
+        notas ? notas.trim() : null,
+        userId
       ]
     );
 
@@ -108,6 +113,7 @@ const create = async (req, res) => {
 // Actualizar proveedor
 const update = async (req, res) => {
   try {
+    const userId = req.userId;
     const { id } = req.params;
     const { nombre_comercial, razon_social, contacto_nombre, telefono, email, direccion, categoria_suministro, dias_entrega, estado, notas } = req.body;
 
@@ -118,7 +124,7 @@ const update = async (req, res) => {
       });
     }
 
-    const [existente] = await pool.query('SELECT id_proveedor FROM PROVEEDORES WHERE id_proveedor = ?', [id]);
+    const [existente] = await pool.query('SELECT id_proveedor FROM PROVEEDORES WHERE id_proveedor = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Proveedor no encontrado' });
     }
@@ -126,7 +132,7 @@ const update = async (req, res) => {
     await pool.query(
       `UPDATE PROVEEDORES 
        SET nombre_comercial = ?, razon_social = ?, contacto_nombre = ?, telefono = ?, email = ?, direccion = ?, categoria_suministro = ?, dias_entrega = ?, estado = ?, notas = ?
-       WHERE id_proveedor = ?`,
+       WHERE id_proveedor = ? AND id_usuario = ?`,
       [
         nombre_comercial.trim(),
         razon_social ? razon_social.trim() : null,
@@ -138,7 +144,8 @@ const update = async (req, res) => {
         dias_entrega ? dias_entrega.trim() : 'Bajo Pedido',
         estado || 'Activo',
         notas ? notas.trim() : null,
-        id
+        id,
+        userId
       ]
     );
 
@@ -155,14 +162,15 @@ const update = async (req, res) => {
 // Eliminar proveedor
 const remove = async (req, res) => {
   try {
+    const userId = req.userId;
     const { id } = req.params;
 
-    const [existente] = await pool.query('SELECT id_proveedor FROM PROVEEDORES WHERE id_proveedor = ?', [id]);
+    const [existente] = await pool.query('SELECT id_proveedor FROM PROVEEDORES WHERE id_proveedor = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Proveedor no encontrado' });
     }
 
-    await pool.query('DELETE FROM PROVEEDORES WHERE id_proveedor = ?', [id]);
+    await pool.query('DELETE FROM PROVEEDORES WHERE id_proveedor = ? AND id_usuario = ?', [id, userId]);
 
     res.json({
       success: true,
@@ -180,4 +188,3 @@ module.exports = {
   update,
   remove
 };
-

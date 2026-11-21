@@ -8,6 +8,9 @@ const port = process.env.PORT || 3000;
 // Test DB Connection on startup
 require('./config/db');
 const { seedMateriaPrima } = require('./utils/seed');
+const { optionalAuth } = require('./middleware/auth.middleware');
+
+const authRoutes = require('./routes/auth.routes');
 const materiaPrimaRoutes = require('./routes/materiaPrima.routes');
 const inventarioRoutes = require('./routes/inventario.routes');
 const comprasRoutes = require('./routes/compras.routes');
@@ -28,6 +31,12 @@ app.use(express.json());
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'API funcionando correctamente conectada a Finanzas_BD' });
 });
+
+// Rutas de autenticación y perfil de usuario
+app.use('/api/auth', authRoutes);
+
+// Middleware multi-tenant para aislar datos por usuario
+app.use('/api', optionalAuth);
 
 app.use('/api/materia-prima', materiaPrimaRoutes);
 app.use('/api/inventario', inventarioRoutes);

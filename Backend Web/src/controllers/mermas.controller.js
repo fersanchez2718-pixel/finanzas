@@ -1,8 +1,9 @@
 const pool = require('../config/db');
 
-// Obtener todas las mermas registradas con métricas
+// Obtener todas las mermas registradas con métricas para el usuario
 const getAll = async (req, res) => {
   try {
+    const userId = req.userId;
     const { busqueda, mes, anio } = req.query;
 
     let query = `
@@ -20,9 +21,9 @@ const getAll = async (req, res) => {
         m.cantidad_disponible as stock_actual
       FROM DESPERDICIOS d
       JOIN MATERIA_PRIMA m ON d.id_materia_prima = m.id_materia_prima
-      WHERE 1=1
+      WHERE d.id_usuario = ?
     `;
-    const params = [];
+    const params = [userId];
 
     if (busqueda) {
       query += ' AND m.nombre LIKE ?';
@@ -80,6 +81,7 @@ const getAll = async (req, res) => {
 const create = async (req, res) => {
   let connection;
   try {
+    const userId = req.userId;
     const { id_materia_prima, fecha, cantidad_desperdiciada, motivo } = req.body;
 
     if (!id_materia_prima || !fecha || cantidad_desperdiciada === undefined) {
@@ -102,8 +104,8 @@ const create = async (req, res) => {
 
     // 1. Obtener insumo actual
     const [insumo] = await connection.query(
-      'SELECT id_materia_prima, nombre, unidad_medida, cantidad_disponible, costo_unitario FROM MATERIA_PRIMA WHERE id_materia_prima = ? FOR UPDATE',
-      [id_materia_prima]
+      'SELECT id_materia_prima, nombre, unidad_medida, cantidad_disponible, costo_unitario FROM MATERIA_PRIMA WHERE id_materia_prima = ? AND id_usuario = ? FOR UPDATE',
+      [id_materia_prima, userId]
     );
 
     if (insumo.length === 0) {
@@ -124,10 +126,10 @@ const create = async (req, res) => {
     const porcentaje = stockActual > 0 ? Math.min(100, (cantNum / stockActual) * 100) : 100;
     const motivoFinal = motivo || 'Merma de cocina / preparación';
 
-    // 2. Insertar merma
+    // 2. Insertar merma vinculada al usuario
     const [resultMerma] = await connection.query(
-      'INSERT INTO DESPERDICIOS (id_materia_prima, fecha, cantidad_desperdiciada, porcentaje_desperdicio, motivo) VALUES (?, ?, ?, ?, ?)',
-      [id_materia_prima, fecha, cantNum, porcentaje.toFixed(2), motivoFinal]
+      'INSERT INTO DESPERDICIOS (id_materia_prima, fecha, cantidad_desperdiciada, porcentaje_desperdicio, motivo, id_usuario) VALUES (?, ?, ?, ?, ?, ?)',
+      [id_materia_prima, fecha, cantNum, porcentaje.toFixed(2), motivoFinal, userId]
     );
 
     // 3. Descontar del inventario y recalcular estado
@@ -135,8 +137,8 @@ const create = async (req, res) => {
     const nuevoEstado = nuevoStock > 5 ? 'Disponible' : nuevoStock > 0 ? 'Stock Bajo' : 'Agotado';
 
     await connection.query(
-      'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ?',
-      [nuevoStock, nuevoEstado, id_materia_prima]
+      'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
+      [nuevoStock, nuevoEstado, id_materia_prima, userId]
     );
 
     await connection.commit();
@@ -168,6 +170,7 @@ const create = async (req, res) => {
 const remove = async (req, res) => {
   let connection;
   try {
+    const userId = req.userId;
     const { id } = req.params;
 
     connection = await pool.getConnection();
@@ -175,8 +178,8 @@ const remove = async (req, res) => {
 
     // 1. Obtener la merma a anular
     const [merma] = await connection.query(
-      'SELECT id_desperdicio, id_materia_prima, cantidad_desperdiciada FROM DESPERDICIOS WHERE id_desperdicio = ? FOR UPDATE',
-      [id]
+      'SELECT id_desperdicio, id_materia_prima, cantidad_desperdiciada FROM DESPERDICIOS WHERE id_desperdicio = ? AND id_usuario = ? FOR UPDATE',
+      [id, userId]
     );
 
     if (merma.length === 0) {
@@ -188,12 +191,12 @@ const remove = async (req, res) => {
     const cantNum = parseFloat(cantidad_desperdiciada);
 
     // 2. Eliminar merma
-    await connection.query('DELETE FROM DESPERDICIOS WHERE id_desperdicio = ?', [id]);
+    await connection.query('DELETE FROM DESPERDICIOS WHERE id_desperdicio = ? AND id_usuario = ?', [id, userId]);
 
     // 3. Reintegrar stock a MATERIA_PRIMA
     const [insumo] = await connection.query(
-      'SELECT cantidad_disponible FROM MATERIA_PRIMA WHERE id_materia_prima = ? FOR UPDATE',
-      [id_materia_prima]
+      'SELECT cantidad_disponible FROM MATERIA_PRIMA WHERE id_materia_prima = ? AND id_usuario = ? FOR UPDATE',
+      [id_materia_prima, userId]
     );
 
     if (insumo.length > 0) {
@@ -202,8 +205,8 @@ const remove = async (req, res) => {
       const nuevoEstado = nuevoStock > 5 ? 'Disponible' : nuevoStock > 0 ? 'Stock Bajo' : 'Agotado';
 
       await connection.query(
-        'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ?',
-        [nuevoStock, nuevoEstado, id_materia_prima]
+        'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
+        [nuevoStock, nuevoEstado, id_materia_prima, userId]
       );
     }
 
@@ -227,4 +230,3 @@ module.exports = {
   create,
   remove
 };
-

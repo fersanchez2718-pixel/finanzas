@@ -1,16 +1,20 @@
 const pool = require('../config/db');
 
-// Obtener balance financiero consolidado (Ventas reales vs Compras + Gastos Operativos)
+// Obtener balance financiero consolidado del usuario autenticado (Ventas reales vs Compras + Gastos Operativos + Nómina)
 const getBalance = async (req, res) => {
   try {
+    const userId = req.userId;
+
     // 1. Ingresos reales desde VENTAS
     const [ventas] = await pool.query(
       `SELECT 
         DATE_FORMAT(fecha_venta, '%Y-%m-%d') as fecha,
         SUM(total) as ingresos
        FROM VENTAS
+       WHERE id_usuario = ?
        GROUP BY fecha_venta
-       ORDER BY fecha_venta ASC`
+       ORDER BY fecha_venta ASC`,
+      [userId]
     );
 
     // 2. Gastos reales desde COMPRAS_MATERIA_PRIMA
@@ -19,8 +23,10 @@ const getBalance = async (req, res) => {
         DATE_FORMAT(fecha_compra, '%Y-%m-%d') as fecha,
         SUM(costo_total) as gastos
        FROM COMPRAS_MATERIA_PRIMA
+       WHERE id_usuario = ?
        GROUP BY fecha_compra
-       ORDER BY fecha_compra ASC`
+       ORDER BY fecha_compra ASC`,
+      [userId]
     );
 
     // 3. Gastos operativos (servicios, renta, limpieza, empaques, etc.)
@@ -31,8 +37,10 @@ const getBalance = async (req, res) => {
           DATE_FORMAT(fecha_gasto, '%Y-%m-%d') as fecha,
           SUM(monto) as gastos_operativos
          FROM GASTOS_OPERATIVOS
+         WHERE id_usuario = ?
          GROUP BY fecha_gasto
-         ORDER BY fecha_gasto ASC`
+         ORDER BY fecha_gasto ASC`,
+        [userId]
       );
       gastosOperativos = goRows;
     } catch (e) {
@@ -47,8 +55,10 @@ const getBalance = async (req, res) => {
           DATE_FORMAT(fecha_pago, '%Y-%m-%d') as fecha,
           SUM(total_pagado) as gastos_nomina
          FROM PAGOS_EMPLEADOS
+         WHERE id_usuario = ?
          GROUP BY fecha_pago
-         ORDER BY fecha_pago ASC`
+         ORDER BY fecha_pago ASC`,
+        [userId]
       );
       pagosNomina = nomRows;
     } catch (e) {
@@ -90,7 +100,7 @@ const getBalance = async (req, res) => {
 
     let transacciones = Object.values(mapaFechas).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 
-    // Si aún no hay movimientos en la BD, dar datos base para visualización
+    // Si aún no hay movimientos en la BD para el usuario (cuenta nueva en ceros)
     if (transacciones.length === 0) {
       const hoy = new Date().toISOString().split('T')[0];
       transacciones = [
@@ -135,4 +145,3 @@ const getBalance = async (req, res) => {
 };
 
 module.exports = { getBalance };
-
