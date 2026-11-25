@@ -1,23 +1,142 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  enqueueMutation,
+  setCachedResponse,
+  getCachedResponse,
+  getOfflineQueue,
+  syncOfflineQueue,
+  initOfflineSyncListeners
+} from '../utils/offlineSync';
 
 const AuthContext = createContext();
 
 const API_BASE = 'http://localhost:3000/api';
 
-// Interceptor global para que todos los fetches lleven el token Bearer automáticamente
+// Iniciar listeners offline globales
+if (typeof window !== 'undefined') {
+  initOfflineSyncListeners();
+}
+
+// Interceptor global para token Bearer + Soporte Offline (Cache GET + Cola Mutaciones)
 if (typeof window !== 'undefined' && !window.__fooderp_fetch_intercepted__) {
   const originalFetch = window.fetch;
   window.fetch = async (...args) => {
     let [resource, config] = args;
-    const token = localStorage.getItem('fooderp_token');
+    config = config || {};
 
-    if (token && typeof resource === 'string' && resource.includes(':3000/api')) {
-      config = config || {};
+    // Si viene marcado internamente para no re-interceptar
+    if (config.__skipOfflineInterceptor) {
+      delete config.__skipOfflineInterceptor;
+      return originalFetch(resource, config);
+    }
+
+    const token = localStorage.getItem('fooderp_token');
+    const isApiCall = typeof resource === 'string' && resource.includes(':3000/api');
+
+    if (token && isApiCall) {
       const headers = new Headers(config.headers || {});
       if (!headers.has('Authorization')) {
         headers.set('Authorization', `Bearer ${token}`);
       }
       config.headers = headers;
+    }
+
+    const method = (config.method || 'GET').toUpperCase();
+
+    // 1. Manejo de peticiones de lectura (GET): Cachear o responder de caché si no hay red
+    if (isApiCall && method === 'GET') {
+      try {
+        if (!navigator.onLine) {
+          const cached = getCachedResponse(resource);
+          if (cached) {
+            return new Response(JSON.stringify(cached), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json', 'X-FoodERP-Offline': 'true' }
+            });
+          }
+        }
+
+        const response = await originalFetch(resource, config);
+        if (response.ok) {
+          try {
+            const clone = response.clone();
+            const data = await clone.json();
+            setCachedResponse(resource, data);
+          } catch (e) {}
+        }
+        return response;
+      } catch (networkError) {
+        // En caso de que la conexión esté caída o backend temporalmente inaccesible
+        const cached = getCachedResponse(resource);
+        if (cached) {
+          return new Response(JSON.stringify(cached), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', 'X-FoodERP-Offline': 'true' }
+          });
+        }
+        throw networkError;
+      }
+    }
+
+    // 2. Manejo de mutaciones (POST, PUT, DELETE): Si no hay red, guardar en cola offline
+    if (isApiCall && (method === 'POST' || method === 'PUT' || method === 'DELETE')) {
+      const isAuthCall = resource.includes('/auth/login') || resource.includes('/auth/register');
+
+      if (!isAuthCall) {
+        if (!navigator.onLine) {
+          const headerObj = {};
+          if (config.headers instanceof Headers) {
+            config.headers.forEach((v, k) => { headerObj[k] = v; });
+          } else if (config.headers) {
+            Object.assign(headerObj, config.headers);
+          }
+
+          enqueueMutation({
+            url: resource,
+            method,
+            headers: headerObj,
+            body: config.body
+          });
+
+          return new Response(JSON.stringify({
+            success: true,
+            offline: true,
+            message: 'Operación guardada localmente en tu dispositivo. Se sincronizará automáticamente al recuperar conexión.'
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+
+        try {
+          const response = await originalFetch(resource, config);
+          return response;
+        } catch (networkError) {
+          // Falla de red: encolar para no perder los datos del usuario
+          const headerObj = {};
+          if (config.headers instanceof Headers) {
+            config.headers.forEach((v, k) => { headerObj[k] = v; });
+          } else if (config.headers) {
+            Object.assign(headerObj, config.headers);
+          }
+
+          enqueueMutation({
+            url: resource,
+            method,
+            headers: headerObj,
+            body: config.body
+          });
+
+          return new Response(JSON.stringify({
+            success: true,
+            offline: true,
+            message: 'Operación guardada localmente en tu dispositivo. Se sincronizará automáticamente al recuperar conexión.'
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+      }
     }
 
     return originalFetch(resource, config);
@@ -36,6 +155,41 @@ export function AuthProvider({ children }) {
     }
   });
   const [loading, setLoading] = useState(false);
+
+  // Estados de conectividad y sincronización offline
+  const [isOnline, setIsOnline] = useState(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [pendingOfflineCount, setPendingOfflineCount] = useState(() => getOfflineQueue().length);
+  const [syncToast, setSyncToast] = useState(null);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    const handleQueueChange = (e) => {
+      setPendingOfflineCount(e.detail?.count ?? getOfflineQueue().length);
+    };
+
+    const handleSynced = (e) => {
+      const count = e.detail?.count || 0;
+      setPendingOfflineCount(getOfflineQueue().length);
+      if (count > 0) {
+        setSyncToast(`¡Conexión restablecida! ${count} cambio(s) sincronizados con la nube`);
+        setTimeout(() => setSyncToast(null), 4500);
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('fooderp:offline-queue-changed', handleQueueChange);
+    window.addEventListener('fooderp:synced', handleSynced);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('fooderp:offline-queue-changed', handleQueueChange);
+      window.removeEventListener('fooderp:synced', handleSynced);
+    };
+  }, []);
 
   // Iniciar sesión con email y password
   const login = async (email, password) => {
@@ -63,7 +217,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Registrar nueva cuenta (comienza en ceros)
+  // Registrar nueva cuenta (comienza en ceros, rol Administrador por defecto)
   const register = async ({ nombre_completo, nombre_negocio, email, password }) => {
     setLoading(true);
     try {
@@ -130,6 +284,10 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const syncNow = async () => {
+    return await syncOfflineQueue();
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -140,7 +298,11 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
-        updateProfile
+        updateProfile,
+        isOnline,
+        pendingOfflineCount,
+        syncNow,
+        syncToast
       }}
     >
       {children}

@@ -248,13 +248,17 @@ const seedMateriaPrima = async () => {
       console.log('✓ 3 Usuarios iniciales creados en USUARIOS.');
     }
 
-    // Asegurar la cuenta maestra de Fernando Ramírez y migrar datos
+    // Asegurar la cuenta maestra de Fernando Ramírez (SuperAdmin) y migrar datos
     let idFernando = null;
-    const [fernandoUser] = await pool.query('SELECT id_usuario FROM USUARIOS WHERE email = ?', ['fernandoramirez@gmail.com']);
+    const [fernandoUser] = await pool.query('SELECT id_usuario, rol FROM USUARIOS WHERE email = ?', ['fernandoramirez@gmail.com']);
     if (fernandoUser.length > 0) {
       idFernando = fernandoUser[0].id_usuario;
+      if (fernandoUser[0].rol !== 'SuperAdmin') {
+        await pool.query('UPDATE USUARIOS SET rol = "SuperAdmin" WHERE id_usuario = ?', [idFernando]);
+        console.log(`✓ Rol de Fernando Ramírez actualizado a SuperAdmin (ID: ${idFernando})`);
+      }
     } else {
-      console.log('Creando cuenta principal de Fernando Ramírez...');
+      console.log('Creando cuenta principal de Fernando Ramírez como SuperAdmin...');
       const [insertFernando] = await pool.query(
         `INSERT INTO USUARIOS (nombre_completo, nombre_negocio, username, email, password_hash, rol, estado, tema_preferido) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -264,13 +268,13 @@ const seedMateriaPrima = async () => {
           'fernandoramirez',
           'fernandoramirez@gmail.com',
           hashPwd('Admin123!'),
-          'Administrador',
+          'SuperAdmin',
           'Activo',
           'nvidia-dark'
         ]
       );
       idFernando = insertFernando.insertId;
-      console.log(`✓ Cuenta principal creada: fernandoramirez@gmail.com (ID: ${idFernando})`);
+      console.log(`✓ Cuenta principal SuperAdmin creada: fernandoramirez@gmail.com (ID: ${idFernando})`);
     }
 
     // Asegurar columna id_usuario en todas las tablas y migrar registros existentes a Fernando

@@ -22,7 +22,11 @@ import {
   UserPlus,
   Shield,
   Sparkles,
-  Store
+  Store,
+  ShieldAlert,
+  Wifi,
+  WifiOff,
+  RotateCw
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from './context/AuthContext';
@@ -39,6 +43,7 @@ import GastosOperativos from './components/GastosOperativos';
 import NominaSueldos from './components/NominaSueldos';
 import DirectorioProveedores from './components/DirectorioProveedores';
 import AdministracionUsuarios from './components/AdministracionUsuarios';
+import SuperAdminUsuarios from './components/SuperAdminUsuarios';
 
 const modules = [
   { id: 'dashboard', name: 'Dashboard Central', icon: LayoutDashboard },
@@ -73,7 +78,7 @@ function DashboardSimple({
           <div>
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Ingresos por Ventas</p>
             <h3 className="text-2xl font-black text-white mt-1">
-              ${Number(kpis.totalIngresos).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${Number(kpis?.totalIngresos || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h3>
             <p className="text-xs text-[#76B900] mt-1">Total recaudado</p>
           </div>
@@ -86,7 +91,7 @@ function DashboardSimple({
           <div>
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Egresos Totales</p>
             <h3 className="text-2xl font-black text-white mt-1">
-              ${Number(kpis.totalGastos).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${Number(kpis?.totalGastos || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h3>
             <p className="text-xs text-rose-400 mt-1">Compras, nómina y gastos</p>
           </div>
@@ -98,8 +103,8 @@ function DashboardSimple({
         <div className="glass-panel rounded-2xl p-5 flex items-center justify-between border-l-4 border-l-[#76B900]">
           <div>
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Utilidad Neta</p>
-            <h3 className={`text-2xl font-black mt-1 ${kpis.utilidadNeta >= 0 ? 'text-[#76B900]' : 'text-rose-400'}`}>
-              ${Number(kpis.utilidadNeta).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <h3 className={`text-2xl font-black mt-1 ${(kpis?.utilidadNeta || 0) >= 0 ? 'text-[#76B900]' : 'text-rose-400'}`}>
+              ${Number(kpis?.utilidadNeta || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h3>
             <p className="text-xs text-slate-400 mt-1">Margen final en caja</p>
           </div>
@@ -112,7 +117,7 @@ function DashboardSimple({
           <div>
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Margen Operativo</p>
             <h3 className="text-2xl font-black text-emerald-400 mt-1">
-              {kpis.margen}%
+              {kpis?.margen ?? 0}%
             </h3>
             <p className="text-xs text-emerald-300 mt-1">Rentabilidad sobre ventas</p>
           </div>
@@ -203,13 +208,23 @@ function DashboardSimple({
 }
 
 function App() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isOnline, pendingOfflineCount, syncNow, syncToast } = useAuth();
   const { theme, toggleTheme, isDark } = useTheme();
 
   // Si no ha iniciado sesión, mostrar directamente la ventana de inicio de sesión o registro
   if (!isAuthenticated) {
     return <LoginScreen />;
   }
+
+  // Fernando Ramírez como SuperAdmin tiene acceso exclusivo a la gestión global de cuentas
+  const isSuperAdmin = user?.rol === 'SuperAdmin' || user?.email === 'fernandoramirez@gmail.com';
+
+  const visibleModules = isSuperAdmin
+    ? [
+        ...modules,
+        { id: 'superadmin', name: 'Gestión Cuentas', icon: ShieldAlert }
+      ]
+    : modules;
 
   const [activeModule, setActiveModule] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -279,7 +294,7 @@ function App() {
     setMonto('');
   };
 
-  const activeModuleName = modules.find(m => m.id === activeModule)?.name || 'Finanzas y Control';
+  const activeModuleName = visibleModules.find(m => m.id === activeModule)?.name || 'Finanzas y Control';
 
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex overflow-hidden transition-colors duration-300">
@@ -310,7 +325,7 @@ function App() {
         </div>
 
         <nav className="flex-1 py-4 px-3 space-y-1.5 overflow-y-auto">
-          {modules.map((m) => {
+          {visibleModules.map((m) => {
             const Icon = m.icon;
             const isActive = activeModule === m.id;
             return (
@@ -359,11 +374,31 @@ function App() {
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
-            {/* Estado de Conexión */}
-            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#76B900]/10 border border-[#76B900]/25 text-xs text-[#76B900] font-semibold">
-              <span className="w-2 h-2 rounded-full bg-[#76B900] animate-pulse"></span>
-              <span>Sistema en Línea</span>
-            </div>
+            {/* Indicador de Conectividad & Sincronización Offline */}
+            {!isOnline ? (
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-xs text-amber-300 font-semibold"
+                title="Sin conexión a internet. Los cambios se guardan en tu dispositivo y se enviarán automáticamente al reconectar."
+              >
+                <WifiOff size={14} className="text-amber-400" />
+                <span>Modo Offline ({pendingOfflineCount} pend.)</span>
+              </div>
+            ) : pendingOfflineCount > 0 ? (
+              <button
+                type="button"
+                onClick={syncNow}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-xs text-blue-300 font-semibold cursor-pointer animate-pulse hover:bg-blue-500/25 transition-colors"
+                title="Haz clic para sincronizar los cambios pendientes con el servidor"
+              >
+                <RotateCw size={14} className="animate-spin text-blue-400" />
+                <span>Sincronizando ({pendingOfflineCount})</span>
+              </button>
+            ) : (
+              <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#76B900]/10 border border-[#76B900]/25 text-xs text-[#76B900] font-semibold">
+                <Wifi size={13} className="text-[#76B900]" />
+                <span>En Línea</span>
+              </div>
+            )}
 
             {/* Usuario Autenticado / Botón de Login */}
             {isAuthenticated ? (
@@ -481,8 +516,22 @@ function App() {
           {activeModule === 'usuarios' && (
             <AdministracionUsuarios />
           )}
+
+          {activeModule === 'superadmin' && isSuperAdmin && (
+            <SuperAdminUsuarios />
+          )}
         </div>
       </main>
+
+      {/* Notificación de sincronización offline */}
+      {syncToast && (
+        <div className="fixed top-6 right-6 z-50 animate-bounce">
+          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl font-bold text-sm bg-emerald-950/95 text-emerald-200 border border-[#76B900]/50 backdrop-blur-md">
+            <Sparkles size={18} className="text-[#76B900]" />
+            <span>{syncToast}</span>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Autenticación (Login / Registro en Ceros) */}
       <AuthModal

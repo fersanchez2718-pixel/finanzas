@@ -140,13 +140,20 @@ const login = async (req, res) => {
     // Actualizar fecha de último acceso
     await pool.query('UPDATE USUARIOS SET ultimo_acceso = NOW() WHERE id_usuario = ?', [user.id_usuario]);
 
+    const isSuperAdmin = (cleanEmail === 'fernandoramirez@gmail.com' || user.rol === 'SuperAdmin');
+    const roleFinal = isSuperAdmin ? 'SuperAdmin' : (user.rol || 'Administrador');
+
+    if (isSuperAdmin && user.rol !== 'SuperAdmin') {
+      await pool.query('UPDATE USUARIOS SET rol = "SuperAdmin" WHERE id_usuario = ?', [user.id_usuario]);
+    }
+
     const userPayload = {
       id_usuario: user.id_usuario,
       nombre_completo: user.nombre_completo,
       nombre_negocio: user.nombre_negocio,
       username: user.username,
       email: user.email,
-      rol: user.rol,
+      rol: roleFinal,
       tema_preferido: user.tema_preferido
     };
 
@@ -187,9 +194,13 @@ const me = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
     }
 
+    const row = rows[0];
+    const isSuperAdmin = (row.email === 'fernandoramirez@gmail.com' || row.rol === 'SuperAdmin');
+    row.rol = isSuperAdmin ? 'SuperAdmin' : (row.rol || 'Administrador');
+
     res.json({
       success: true,
-      user: rows[0]
+      user: row
     });
   } catch (error) {
     console.error('Error en me:', error);

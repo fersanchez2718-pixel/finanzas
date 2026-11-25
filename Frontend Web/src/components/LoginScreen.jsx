@@ -8,7 +8,6 @@ import {
   Store,
   Eye,
   EyeOff,
-  Sparkles,
   CheckCircle2,
   AlertCircle,
   ArrowRight,
@@ -52,18 +51,6 @@ export default function LoginScreen() {
       }
     } catch (err) {
       setError(err.message || 'Ocurrió un error al procesar tu solicitud');
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setError(null);
-    setEmail('fernandoramirez@gmail.com');
-    setPassword('Admin123!');
-    try {
-      const res = await login('fernandoramirez@gmail.com', 'Admin123!');
-      setSuccess('Sesión iniciada con la cuenta de Fernando Ramírez.');
-    } catch (err) {
-      setError(err.message || 'No se pudo iniciar sesión con la cuenta demo');
     }
   };
 
@@ -266,27 +253,6 @@ export default function LoginScreen() {
             )}
           </button>
         </form>
-
-        {/* Acceso Rápido a Cuenta Demo (Fernando Ramírez) */}
-        {tab === 'login' && (
-          <div className="px-6 sm:px-8 pb-8 pt-0">
-            <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-slate-700/50"></div>
-              <span className="flex-shrink mx-3 text-[11px] text-slate-400 uppercase tracking-wider font-semibold">O también</span>
-              <div className="flex-grow border-t border-slate-700/50"></div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              disabled={loading}
-              className="w-full py-3 px-4 rounded-xl text-xs font-semibold border border-slate-700 hover:border-[#76B900]/60 bg-slate-900/40 hover:bg-slate-800/60 text-slate-200 transition-all flex items-center justify-center gap-2 group cursor-pointer"
-            >
-              <Sparkles size={15} className="text-[#76B900] group-hover:scale-110 transition-transform" />
-              <span>Acceder con Cuenta Principal (Fernando Ramírez)</span>
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

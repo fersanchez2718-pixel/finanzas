@@ -8,7 +8,6 @@ import {
   Store,
   Eye,
   EyeOff,
-  Sparkles,
   CheckCircle2,
   AlertCircle,
   X,
@@ -59,21 +58,6 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
       }
     } catch (err) {
       setError(err.message || 'Ocurrió un error al procesar tu solicitud');
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setError(null);
-    setEmail('fernandoramirez@gmail.com');
-    setPassword('Admin123!');
-    try {
-      const res = await login('fernandoramirez@gmail.com', 'Admin123!');
-      setSuccess('Sesión iniciada con la cuenta principal de Fernando Ramírez.');
-      setTimeout(() => {
-        onClose();
-      }, 600);
-    } catch (err) {
-      setError(err.message || 'No se pudo iniciar sesión con la cuenta demo');
     }
   };
 
@@ -267,27 +251,6 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
             )}
           </button>
         </form>
-
-        {/* Acceso Rápido a Cuenta Demo (Fernando Ramírez) */}
-        {tab === 'login' && (
-          <div className="px-6 pb-6 pt-2">
-            <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-slate-700/50"></div>
-              <span className="flex-shrink mx-3 text-[11px] text-slate-400 uppercase tracking-wider font-semibold">O también</span>
-              <div className="flex-grow border-t border-slate-700/50"></div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              disabled={loading}
-              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold border border-slate-700 hover:border-[#76B900]/60 bg-slate-900/40 hover:bg-slate-800/60 text-slate-200 transition-all flex items-center justify-center gap-2 group"
-            >
-              <Sparkles size={14} className="text-[#76B900] group-hover:scale-110 transition-transform" />
-              <span>Ingresar como Administrador Demo (Fernando Ramírez)</span>
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

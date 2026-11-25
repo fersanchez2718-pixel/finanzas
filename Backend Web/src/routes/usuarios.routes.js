@@ -4,6 +4,7 @@ const controller = require('../controllers/usuarios.controller');
 
 router.get('/', controller.getAll);
 router.post('/', controller.create);
+router.put('/:id/toggle-estado', controller.toggleEstado);
 router.put('/:id', controller.update);
 router.delete('/:id', controller.remove);
 

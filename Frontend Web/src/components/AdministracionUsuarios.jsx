@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ConfiguracionUsuario from './ConfiguracionUsuario';
+import SuperAdminUsuarios from './SuperAdminUsuarios';
+import { useAuth } from '../context/AuthContext';
 import {
   UserCog,
   Plus,
@@ -27,7 +29,9 @@ import {
 const API_USUARIOS = 'http://localhost:3000/api/usuarios';
 
 export default function AdministracionUsuarios() {
-  const [activeTab, setActiveTab] = useState('configuracion'); // 'configuracion' | 'personal'
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.rol === 'SuperAdmin' || currentUser?.email === 'fernandoramirez@gmail.com';
+  const [activeTab, setActiveTab] = useState('configuracion'); // 'configuracion' | 'personal' | 'superadmin'
   const [usuarios, setUsuarios] = useState([]);
   const [resumen, setResumen] = useState({
     totalUsuarios: 0,
@@ -241,7 +245,7 @@ export default function AdministracionUsuarios() {
           }`}
         >
           <UserCog size={18} />
-          <span>Configuración de Cuenta & Estilo NVIDIA</span>
+          <span>Configuración de Cuenta & Estilo</span>
         </button>
 
         <button
@@ -254,12 +258,29 @@ export default function AdministracionUsuarios() {
           }`}
         >
           <ShieldCheck size={18} />
-          <span>Personal y Accesos del Sistema</span>
+          <span>Personal y Accesos del Negocio</span>
         </button>
+
+        {isSuperAdmin && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('superadmin')}
+            className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+              activeTab === 'superadmin'
+                ? 'bg-[#76B900] text-black shadow-[0_0_15px_rgba(118,185,0,0.35)]'
+                : 'text-slate-400 hover:text-white bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800'
+            }`}
+          >
+            <ShieldAlert size={18} />
+            <span>Cuentas Registradas (SuperAdmin)</span>
+          </button>
+        )}
       </div>
 
       {activeTab === 'configuracion' ? (
         <ConfiguracionUsuario />
+      ) : activeTab === 'superadmin' && isSuperAdmin ? (
+        <SuperAdminUsuarios />
       ) : (
         <>
           {/* Encabezado */}
