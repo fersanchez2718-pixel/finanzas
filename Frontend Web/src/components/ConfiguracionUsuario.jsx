@@ -113,7 +113,7 @@ export default function ConfiguracionUsuario() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black text-white">Configuración de Cuenta & Estilo</h1>
+              <h1 className="text-2xl font-black text-white">Configuración de Cuenta</h1>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-[#76B900]/20 text-[#76B900] border border-[#76B900]/30">
                 Personalización
               </span>
@@ -126,7 +126,7 @@ export default function ConfiguracionUsuario() {
 
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300">
           <Shield size={14} className="text-[#76B900]" />
-          <span>Aislamiento Multi-Tenant Activo</span>
+          <span>Cuenta Privada y Segura</span>
         </div>
       </div>
 
@@ -231,15 +231,15 @@ export default function ConfiguracionUsuario() {
             </div>
           </div>
 
-          {/* Columna Derecha: Selector de Temas NVIDIA */}
+          {/* Columna Derecha: Selector de Temas */}
           <div className="glass-panel rounded-2xl p-6 sm:p-7 flex flex-col gap-5">
             <h2 className="text-lg font-bold text-white flex items-center gap-2 border-b border-slate-800/80 pb-3">
               <Palette size={18} className="text-[#76B900]" />
-              <span>Tema Visual NVIDIA</span>
+              <span>Tema Visual</span>
             </h2>
 
             <p className="text-xs text-slate-400 leading-relaxed">
-              Elige la experiencia visual que mejor se adapte a tu entorno de trabajo:
+              Elige la experiencia visual que mejor se adapte a tu preferencia:
             </p>
 
             {/* Tarjeta Modo Oscuro */}
@@ -257,8 +257,8 @@ export default function ConfiguracionUsuario() {
                     <Moon size={16} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-white">Modo Oscuro (NVIDIA Dark)</h3>
-                    <p className="text-[11px] text-slate-400">Fondo obsidiana con acentos verdes</p>
+                    <h3 className="font-bold text-sm text-white">Modo Oscuro</h3>
+                    <p className="text-[11px] text-slate-400">Fondo oscuro con acentos verdes</p>
                   </div>
                 </div>
                 {formData.tema_preferido === 'nvidia-dark' && (
@@ -276,7 +276,7 @@ export default function ConfiguracionUsuario() {
               </div>
             </div>
 
-            {/* Tarjeta NVIDIA Light Studio */}
+            {/* Tarjeta Modo Claro */}
             <div
               onClick={() => handleSelectTheme('nvidia-light')}
               className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 flex flex-col gap-3 relative overflow-hidden ${
@@ -292,9 +292,9 @@ export default function ConfiguracionUsuario() {
                   </div>
                   <div>
                     <h3 className={`font-bold text-sm ${formData.tema_preferido === 'nvidia-light' ? 'text-slate-900' : 'text-white'}`}>
-                      Modo Claro (NVIDIA Light)
+                      Modo Claro
                     </h3>
-                    <p className="text-[11px] text-slate-400">Blanco clínico y alto contraste</p>
+                    <p className="text-[11px] text-slate-400">Fondo claro y alto contraste</p>
                   </div>
                 </div>
                 {formData.tema_preferido === 'nvidia-light' && (

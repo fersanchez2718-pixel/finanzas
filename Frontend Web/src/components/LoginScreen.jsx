@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
-  ShieldCheck,
   Sun,
   Moon
 } from 'lucide-react';
@@ -47,7 +46,7 @@ export default function LoginScreen() {
           email,
           password
         });
-        setSuccess('¡Cuenta creada exitosamente! Tu entorno se ha inicializado en ceros.');
+        setSuccess('¡Cuenta creada exitosamente!');
       }
     } catch (err) {
       setError(err.message || 'Ocurrió un error al procesar tu solicitud');
@@ -91,12 +90,12 @@ export default function LoginScreen() {
           </div>
 
           <h1 className="text-2xl font-black tracking-tight">
-            {tab === 'login' ? 'Iniciar Sesión' : 'Crear Nueva Cuenta'}
+            {tab === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
           </h1>
           <p className="text-xs text-slate-400 mt-1">
             {tab === 'login'
               ? 'Accede a tu panel de control y finanzas'
-              : 'Registra tu restaurante e inicia con un espacio en ceros'}
+              : 'Registra tu negocio para comenzar'}
           </p>
 
           {/* Selector de Pestañas: Iniciar Sesión / Registrarse */}
@@ -229,15 +228,6 @@ export default function LoginScreen() {
             </div>
           </div>
 
-          {tab === 'register' && (
-            <div className="p-3.5 rounded-xl bg-[#76B900]/10 border border-[#76B900]/25 text-xs text-slate-300 flex items-start gap-2.5">
-              <ShieldCheck size={18} className="text-[#76B900] shrink-0 mt-0.5" />
-              <span>
-                <strong>Aislamiento total:</strong> Tu cuenta iniciará completamente en <strong>ceros</strong> sin datos compartidos con otros usuarios.
-              </span>
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={loading}
@@ -247,7 +237,7 @@ export default function LoginScreen() {
               <span className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                <span>{tab === 'login' ? 'Entrar al Sistema' : 'Crear mi Cuenta en Ceros'}</span>
+                <span>{tab === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}</span>
                 <ArrowRight size={17} />
               </>
             )}

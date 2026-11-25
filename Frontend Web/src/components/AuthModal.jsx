@@ -11,8 +11,7 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
-  ArrowRight,
-  ShieldCheck
+  ArrowRight
 } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
@@ -51,7 +50,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
           email,
           password
         });
-        setSuccess('¡Cuenta creada exitosamente! Tu entorno se ha inicializado en ceros.');
+        setSuccess('¡Cuenta creada exitosamente!');
         setTimeout(() => {
           onClose();
         }, 800);
@@ -70,7 +69,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
             : 'bg-white border-slate-200 text-slate-800 shadow-2xl'
         }`}
       >
-        {/* Cabecera con Acento NVIDIA */}
+        {/* Cabecera */}
         <div className="relative px-6 pt-6 pb-4 border-b border-white/5 bg-gradient-to-r from-emerald-950/30 via-transparent to-transparent">
           <button
             type="button"
@@ -84,17 +83,17 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
           <div className="flex items-center gap-2 mb-1">
             <span className="w-3 h-3 rounded-full bg-[#76B900] shadow-[0_0_10px_#76B900]" />
             <span className="font-extrabold text-sm tracking-wider uppercase text-[#76B900]">
-              FoodERP Cloud
+              FoodERP
             </span>
           </div>
 
           <h2 className="text-2xl font-bold">
-            {tab === 'login' ? 'Iniciar Sesión' : 'Crear Nueva Cuenta'}
+            {tab === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
             {tab === 'login'
               ? 'Accede a tu panel financiero y administrativo'
-              : 'Empieza con un espacio independiente en ceros'}
+              : 'Completa tus datos para comenzar'}
           </p>
 
           {/* Selector de Pestañas */}
@@ -227,15 +226,6 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
             </div>
           </div>
 
-          {tab === 'register' && (
-            <div className="p-3 rounded-xl bg-[#76B900]/10 border border-[#76B900]/25 text-xs text-slate-300 flex items-start gap-2">
-              <ShieldCheck size={18} className="text-[#76B900] shrink-0 mt-0.5" />
-              <span>
-                <strong>Aislamiento total:</strong> Tu cuenta iniciará completamente en <strong>ceros</strong> sin datos compartidos con otros usuarios.
-              </span>
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={loading}
@@ -245,7 +235,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }) {
               <span className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                <span>{tab === 'login' ? 'Entrar al Sistema' : 'Crear mi Cuenta en Ceros'}</span>
+                <span>{tab === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}</span>
                 <ArrowRight size={16} />
               </>
             )}

@@ -245,7 +245,7 @@ export default function AdministracionUsuarios() {
           }`}
         >
           <UserCog size={18} />
-          <span>Configuración de Cuenta & Estilo</span>
+          <span>Configuración de Cuenta</span>
         </button>
 
         <button

@@ -278,7 +278,7 @@ export default function SuperAdminUsuarios() {
           <h3 className="text-2xl font-black text-amber-400 mt-1.5">
             {resumen.desgloseRoles?.Administrador || 0}
           </h3>
-          <p className="text-xs text-amber-300 mt-1">Empresas autónomas en ceros</p>
+          <p className="text-xs text-amber-300 mt-1">Empresas registradas</p>
         </div>
       </div>
 

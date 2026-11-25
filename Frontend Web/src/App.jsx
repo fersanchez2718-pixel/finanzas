@@ -359,7 +359,7 @@ function App() {
             <div className="hidden lg:flex items-center gap-1.5 text-xs text-slate-400 font-medium">
               <span>•</span>
               <Store size={14} className="text-[#76B900]" />
-              <span className="text-slate-300 font-semibold">{user?.nombre_negocio || 'FoodERP Restaurant & Gourmet'}</span>
+              <span className="text-slate-300 font-semibold">{user?.nombre_negocio || 'Mi Negocio'}</span>
             </div>
           </div>
 
@@ -457,7 +457,7 @@ function App() {
                   className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-700 hover:border-[#76B900]/60 bg-slate-900/40 text-slate-200 transition-all cursor-pointer"
                 >
                   <UserPlus size={15} className="text-[#76B900]" />
-                  <span>Crear Cuenta en Ceros</span>
+                  <span>Crear Cuenta</span>
                 </button>
               </div>
             )}

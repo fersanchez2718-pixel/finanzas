@@ -73,7 +73,7 @@ const register = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Cuenta creada exitosamente. Tu entorno está listo para comenzar en ceros.',
+      message: 'Cuenta creada exitosamente.',
       token,
       user: userPayload
     });
