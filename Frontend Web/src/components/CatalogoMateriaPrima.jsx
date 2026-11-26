@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../utils/api';
 import { 
   Carrot, 
   Plus, 
@@ -16,7 +17,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-const API_URL = 'http://localhost:3000/api/materia-prima';
+const API_URL = `${API_BASE}/materia-prima`;
 
 export default function CatalogoMateriaPrima() {
   const [insumos, setInsumos] = useState([]);

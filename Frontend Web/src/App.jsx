@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from './utils/api';
 import {
   LayoutDashboard,
   Carrot,
@@ -245,7 +246,7 @@ function App() {
 
   const cargarBalance = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/dashboard/balance');
+      const res = await fetch(`${API_BASE}/dashboard/balance`);
       const data = await res.json();
       if (data.success && data.transacciones) {
         setTransacciones(data.transacciones);

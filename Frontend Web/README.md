@@ -1,5 +1,11 @@
 # React + Vite
 
+## Conexión del frontend con la API
+
+Configura `VITE_API_URL` con la URL pública del backend (por ejemplo, `https://mi-api.up.railway.app`). No incluyas credenciales de la base de datos. En local, el valor predeterminado es `http://localhost:3000`.
+
+En Cloudflare Pages, agrega `VITE_API_URL` como variable de entorno de compilación y vuelve a desplegar el sitio tras cambiarla. El valor puede ser el dominio del backend con o sin el sufijo `/api`.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

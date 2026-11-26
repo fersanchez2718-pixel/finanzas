@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../utils/api';
 import {
   Contact2,
   Plus,
@@ -26,7 +27,7 @@ import {
   Filter
 } from 'lucide-react';
 
-const API_PROVEEDORES = 'http://localhost:3000/api/proveedores';
+const API_PROVEEDORES = `${API_BASE}/proveedores`;
 
 export default function DirectorioProveedores() {
   const [proveedores, setProveedores] = useState([]);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../utils/api';
 import {
   BadgeDollarSign,
   Plus,
@@ -25,8 +26,8 @@ import {
   Eye
 } from 'lucide-react';
 
-const API_VENTAS = 'http://localhost:3000/api/ventas';
-const API_PRODUCTOS = 'http://localhost:3000/api/productos';
+const API_VENTAS = `${API_BASE}/ventas`;
+const API_PRODUCTOS = `${API_BASE}/productos`;
 
 export default function RegistroVentas() {
   const [ventas, setVentas] = useState([]);

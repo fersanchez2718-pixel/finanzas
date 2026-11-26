@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../utils/api';
 import ConfiguracionUsuario from './ConfiguracionUsuario';
 import SuperAdminUsuarios from './SuperAdminUsuarios';
 import { useAuth } from '../context/AuthContext';
@@ -26,7 +27,7 @@ import {
   Palette
 } from 'lucide-react';
 
-const API_USUARIOS = 'http://localhost:3000/api/usuarios';
+const API_USUARIOS = `${API_BASE}/usuarios`;
 
 export default function AdministracionUsuarios() {
   const { user: currentUser } = useAuth();

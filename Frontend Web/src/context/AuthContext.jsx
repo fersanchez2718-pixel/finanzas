@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { API_BASE } from '../utils/api';
 import {
   enqueueMutation,
   setCachedResponse,
@@ -9,8 +10,6 @@ import {
 } from '../utils/offlineSync';
 
 const AuthContext = createContext();
-
-const API_BASE = 'http://localhost:3000/api';
 
 // Iniciar listeners offline globales
 if (typeof window !== 'undefined') {

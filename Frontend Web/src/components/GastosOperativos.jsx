@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../utils/api';
 import {
   Receipt,
   Plus,
@@ -23,7 +24,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 
-const API_GASTOS = 'http://localhost:3000/api/gastos-operativos';
+const API_GASTOS = `${API_BASE}/gastos-operativos`;
 
 export default function GastosOperativos() {
   const [gastos, setGastos] = useState([]);

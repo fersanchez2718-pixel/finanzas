@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../utils/api';
 import { 
   ShoppingCart, 
   Plus, 
@@ -16,8 +17,8 @@ import {
   TrendingUp
 } from 'lucide-react';
 
-const API_COMPRAS = 'http://localhost:3000/api/compras';
-const API_MATERIA_PRIMA = 'http://localhost:3000/api/materia-prima';
+const API_COMPRAS = `${API_BASE}/compras`;
+const API_MATERIA_PRIMA = `${API_BASE}/materia-prima`;
 
 export default function RegistroCompras() {
   const [compras, setCompras] = useState([]);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../utils/api';
 import { 
   Package, 
   Search, 
@@ -17,7 +18,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-const API_INVENTARIO = 'http://localhost:3000/api/inventario';
+const API_INVENTARIO = `${API_BASE}/inventario`;
 
 export default function GestionInventario() {
   const [inventario, setInventario] = useState([]);

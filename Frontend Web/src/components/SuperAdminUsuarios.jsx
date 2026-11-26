@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../utils/api';
 import {
   ShieldAlert,
   Search,
@@ -22,7 +23,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const API_USUARIOS = 'http://localhost:3000/api/usuarios';
+const API_USUARIOS = `${API_BASE}/usuarios`;
 
 export default function SuperAdminUsuarios() {
   const { user: currentUser } = useAuth();

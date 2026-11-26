@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../utils/api';
 import {
   Users,
   Plus,
@@ -25,7 +26,7 @@ import {
   Receipt
 } from 'lucide-react';
 
-const API_NOMINA = 'http://localhost:3000/api/nomina';
+const API_NOMINA = `${API_BASE}/nomina`;
 
 export default function NominaSueldos() {
   const [activeTab, setActiveTab] = useState('pagos'); // 'pagos' | 'empleados'

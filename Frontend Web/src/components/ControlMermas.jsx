@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../utils/api';
 import { 
   Trash2, 
   Plus, 
@@ -13,8 +14,8 @@ import {
   Layers
 } from 'lucide-react';
 
-const API_MERMAS = 'http://localhost:3000/api/mermas';
-const API_MATERIA_PRIMA = 'http://localhost:3000/api/materia-prima';
+const API_MERMAS = `${API_BASE}/mermas`;
+const API_MATERIA_PRIMA = `${API_BASE}/materia-prima`;
 
 export default function ControlMermas() {
   const [mermas, setMermas] = useState([]);
