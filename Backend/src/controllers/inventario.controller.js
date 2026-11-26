@@ -5,7 +5,7 @@ const getInventario = async (req, res) => {
   try {
     const userId = req.userId;
     const { busqueda, estado } = req.query;
-    let query = 'SELECT * FROM MATERIA_PRIMA WHERE id_usuario = ?';
+    let query = 'SELECT * FROM materia_prima WHERE id_usuario = ?';
     const params = [userId];
 
     if (busqueda) {
@@ -78,7 +78,7 @@ const ajustarStock = async (req, res) => {
       return res.status(400).json({ success: false, message: 'La cantidad debe ser un número positivo válido' });
     }
 
-    const [rows] = await pool.query('SELECT * FROM MATERIA_PRIMA WHERE id_materia_prima = ? AND id_usuario = ?', [id, userId]);
+    const [rows] = await pool.query('SELECT * FROM materia_prima WHERE id_materia_prima = ? AND id_usuario = ?', [id, userId]);
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Insumo no encontrado' });
     }
@@ -105,7 +105,7 @@ const ajustarStock = async (req, res) => {
     }
 
     await pool.query(
-      'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
+      'UPDATE materia_prima SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
       [nuevaCantidad, nuevoEstado, id, userId]
     );
 

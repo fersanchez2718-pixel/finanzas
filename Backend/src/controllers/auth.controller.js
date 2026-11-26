@@ -29,7 +29,7 @@ const register = async (req, res) => {
 
     // Verificar si el email ya existe
     const [existentes] = await pool.query(
-      'SELECT id_usuario FROM USUARIOS WHERE email = ?',
+      'SELECT id_usuario FROM usuarios WHERE email = ?',
       [cleanEmail]
     );
 
@@ -43,7 +43,7 @@ const register = async (req, res) => {
     // Generar username automático derivado del email
     const baseUsername = cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '');
     let finalUsername = baseUsername;
-    const [userCheck] = await pool.query('SELECT id_usuario FROM USUARIOS WHERE username = ?', [finalUsername]);
+    const [userCheck] = await pool.query('SELECT id_usuario FROM usuarios WHERE username = ?', [finalUsername]);
     if (userCheck.length > 0) {
       finalUsername = `${baseUsername}_${Math.floor(100 + Math.random() * 900)}`;
     }
@@ -51,7 +51,7 @@ const register = async (req, res) => {
     const passwordHash = hashPwd(password);
 
     const [result] = await pool.query(
-      `INSERT INTO USUARIOS 
+      `INSERT INTO usuarios 
         (nombre_completo, nombre_negocio, username, email, password_hash, rol, estado, tema_preferido) 
        VALUES (?, ?, ?, ?, ?, 'Administrador', 'Activo', 'nvidia-dark')`,
       [cleanNombre, cleanNegocio, finalUsername, cleanEmail, passwordHash]
@@ -109,7 +109,7 @@ const login = async (req, res) => {
         rol, 
         estado, 
         COALESCE(tema_preferido, 'nvidia-dark') as tema_preferido 
-       FROM USUARIOS 
+       FROM usuarios 
        WHERE email = ? OR username = ?`,
       [cleanEmail, cleanEmail]
     );
@@ -138,7 +138,7 @@ const login = async (req, res) => {
     }
 
     // Actualizar fecha de último acceso
-    await pool.query('UPDATE USUARIOS SET ultimo_acceso = NOW() WHERE id_usuario = ?', [user.id_usuario]);
+    await pool.query('UPDATE usuarios SET ultimo_acceso = NOW() WHERE id_usuario = ?', [user.id_usuario]);
 
     const userPayload = {
       id_usuario: user.id_usuario,
@@ -178,7 +178,7 @@ const me = async (req, res) => {
         estado, 
         COALESCE(tema_preferido, 'nvidia-dark') as tema_preferido,
         DATE_FORMAT(ultimo_acceso, '%Y-%m-%d %H:%i') as ultimo_acceso
-       FROM USUARIOS 
+       FROM usuarios 
        WHERE id_usuario = ?`,
       [req.userId]
     );
@@ -220,14 +220,14 @@ const updateProfile = async (req, res) => {
       }
       const newHash = hashPwd(password.trim());
       await pool.query(
-        `UPDATE USUARIOS 
+        `UPDATE usuarios 
          SET nombre_completo = ?, nombre_negocio = ?, email = ?, tema_preferido = ?, password_hash = ?
          WHERE id_usuario = ?`,
         [nombre_completo.trim(), (nombre_negocio || '').trim(), (email || '').trim().toLowerCase(), tema_preferido || 'nvidia-dark', newHash, userId]
       );
     } else {
       await pool.query(
-        `UPDATE USUARIOS 
+        `UPDATE usuarios 
          SET nombre_completo = ?, nombre_negocio = ?, email = ?, tema_preferido = ?
          WHERE id_usuario = ?`,
         [nombre_completo.trim(), (nombre_negocio || '').trim(), (email || '').trim().toLowerCase(), tema_preferido || 'nvidia-dark', userId]
@@ -235,7 +235,7 @@ const updateProfile = async (req, res) => {
     }
 
     const [updatedRows] = await pool.query(
-      `SELECT id_usuario, nombre_completo, COALESCE(nombre_negocio, 'FoodERP Restaurant') as nombre_negocio, username, email, rol, COALESCE(tema_preferido, 'nvidia-dark') as tema_preferido FROM USUARIOS WHERE id_usuario = ?`,
+      `SELECT id_usuario, nombre_completo, COALESCE(nombre_negocio, 'FoodERP Restaurant') as nombre_negocio, username, email, rol, COALESCE(tema_preferido, 'nvidia-dark') as tema_preferido FROM usuarios WHERE id_usuario = ?`,
       [userId]
     );
 

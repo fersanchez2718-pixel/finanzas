@@ -17,7 +17,7 @@ const getAll = async (req, res) => {
         comprobante_referencia,
         notas,
         created_at
-      FROM GASTOS_OPERATIVOS
+      FROM gastos_operativos
       WHERE id_usuario = ?
     `;
     const params = [userId];
@@ -94,7 +94,7 @@ const create = async (req, res) => {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO GASTOS_OPERATIVOS 
+      `INSERT INTO gastos_operativos 
         (concepto, categoria, monto, fecha_gasto, metodo_pago, comprobante_referencia, notas, id_usuario) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -142,13 +142,13 @@ const update = async (req, res) => {
       });
     }
 
-    const [existente] = await pool.query('SELECT id_gasto FROM GASTOS_OPERATIVOS WHERE id_gasto = ? AND id_usuario = ?', [id, userId]);
+    const [existente] = await pool.query('SELECT id_gasto FROM gastos_operativos WHERE id_gasto = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Registro de gasto no encontrado' });
     }
 
     await pool.query(
-      `UPDATE GASTOS_OPERATIVOS 
+      `UPDATE gastos_operativos 
        SET concepto = ?, categoria = ?, monto = ?, fecha_gasto = ?, metodo_pago = ?, comprobante_referencia = ?, notas = ?
        WHERE id_gasto = ? AND id_usuario = ?`,
       [
@@ -180,12 +180,12 @@ const remove = async (req, res) => {
     const userId = req.userId;
     const { id } = req.params;
 
-    const [existente] = await pool.query('SELECT id_gasto FROM GASTOS_OPERATIVOS WHERE id_gasto = ? AND id_usuario = ?', [id, userId]);
+    const [existente] = await pool.query('SELECT id_gasto FROM gastos_operativos WHERE id_gasto = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'El gasto a eliminar no existe' });
     }
 
-    await pool.query('DELETE FROM GASTOS_OPERATIVOS WHERE id_gasto = ? AND id_usuario = ?', [id, userId]);
+    await pool.query('DELETE FROM gastos_operativos WHERE id_gasto = ? AND id_usuario = ?', [id, userId]);
 
     res.json({
       success: true,

@@ -59,34 +59,34 @@ const usuariosIniciales = [
 
 const seedMateriaPrima = async () => {
   try {
-    const [rows] = await pool.query('SELECT COUNT(*) as total FROM MATERIA_PRIMA');
+    const [rows] = await pool.query('SELECT COUNT(*) as total FROM materia_prima');
     if (rows[0].total === 0) {
       console.log('Sembrando catálogo inicial de materia prima (Negocio de Comida)...');
       for (const item of insumosIniciales) {
         await pool.query(
-          'INSERT INTO MATERIA_PRIMA (nombre, unidad_medida, cantidad_disponible, costo_unitario, estado) VALUES (?, ?, ?, ?, ?)',
+          'INSERT INTO materia_prima (nombre, unidad_medida, cantidad_disponible, costo_unitario, estado) VALUES (?, ?, ?, ?, ?)',
           [item.nombre, item.unidad_medida, item.cantidad_disponible, item.costo_unitario, item.estado]
         );
       }
-      console.log('✓ 10 Insumos culinarios insertados exitosamente en MATERIA_PRIMA.');
+      console.log('✓ 10 Insumos culinarios insertados exitosamente en materia_prima.');
     }
 
     // Sembrar productos / menú si está vacío
-    const [prodRows] = await pool.query('SELECT COUNT(*) as total FROM PRODUCTOS');
+    const [prodRows] = await pool.query('SELECT COUNT(*) as total FROM productos');
     if (prodRows[0].total === 0) {
-      console.log('Sembrando menú de platillos en PRODUCTOS...');
+      console.log('Sembrando menú de platillos en productos...');
       for (const prod of productosIniciales) {
         await pool.query(
-          'INSERT INTO PRODUCTOS (nombre_producto, descripcion, precio, estado) VALUES (?, ?, ?, ?)',
+          'INSERT INTO productos (nombre_producto, descripcion, precio, estado) VALUES (?, ?, ?, ?)',
           [prod.nombre_producto, prod.descripcion, prod.precio, prod.estado]
         );
       }
-      console.log('✓ Menú inicial de platillos insertado en PRODUCTOS.');
+      console.log('✓ Menú inicial de platillos insertado en productos.');
     }
 
-    // Asegurar y sembrar tabla GASTOS_OPERATIVOS
+    // Asegurar y sembrar tabla gastos_operativos
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS GASTOS_OPERATIVOS (
+      CREATE TABLE IF NOT EXISTS gastos_operativos (
         id_gasto INT AUTO_INCREMENT PRIMARY KEY,
         concepto VARCHAR(150) NOT NULL,
         categoria VARCHAR(60) NOT NULL,
@@ -99,21 +99,21 @@ const seedMateriaPrima = async () => {
       )
     `);
 
-    const [gastosRows] = await pool.query('SELECT COUNT(*) as total FROM GASTOS_OPERATIVOS');
+    const [gastosRows] = await pool.query('SELECT COUNT(*) as total FROM gastos_operativos');
     if (gastosRows[0].total === 0) {
       console.log('Sembrando gastos operativos iniciales...');
       for (const g of gastosOperativosIniciales) {
         await pool.query(
-          'INSERT INTO GASTOS_OPERATIVOS (concepto, categoria, monto, fecha_gasto, metodo_pago, comprobante_referencia, notas) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO gastos_operativos (concepto, categoria, monto, fecha_gasto, metodo_pago, comprobante_referencia, notas) VALUES (?, ?, ?, ?, ?, ?, ?)',
           [g.concepto, g.categoria, g.monto, g.fecha_gasto, g.metodo_pago, g.comprobante_referencia, g.notas]
         );
       }
-      console.log('✓ 6 Gastos operativos iniciales insertados en GASTOS_OPERATIVOS.');
+      console.log('✓ 6 Gastos operativos iniciales insertados en gastos_operativos.');
     }
 
-    // Asegurar estructura de EMPLEADOS
+    // Asegurar estructura de empleados
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS EMPLEADOS (
+      CREATE TABLE IF NOT EXISTS empleados (
         id_empleado INT AUTO_INCREMENT PRIMARY KEY,
         nombre VARCHAR(150) NOT NULL,
         puesto VARCHAR(100) DEFAULT 'General',
@@ -126,18 +126,18 @@ const seedMateriaPrima = async () => {
     `);
 
     try {
-      await pool.query('ALTER TABLE EMPLEADOS ADD COLUMN puesto VARCHAR(100) DEFAULT "General"');
+      await pool.query('ALTER TABLE empleados ADD COLUMN puesto VARCHAR(100) DEFAULT "General"');
     } catch (e) {}
     try {
-      await pool.query('ALTER TABLE EMPLEADOS ADD COLUMN telefono VARCHAR(30)');
+      await pool.query('ALTER TABLE empleados ADD COLUMN telefono VARCHAR(30)');
     } catch (e) {}
     try {
-      await pool.query('ALTER TABLE EMPLEADOS ADD COLUMN estado VARCHAR(30) DEFAULT "Activo"');
+      await pool.query('ALTER TABLE empleados ADD COLUMN estado VARCHAR(30) DEFAULT "Activo"');
     } catch (e) {}
 
-    // Asegurar estructura de PAGOS_EMPLEADOS
+    // Asegurar estructura de pagos_empleados
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS PAGOS_EMPLEADOS (
+      CREATE TABLE IF NOT EXISTS pagos_empleados (
         id_pago INT AUTO_INCREMENT PRIMARY KEY,
         id_empleado INT NOT NULL,
         fecha_pago DATE NOT NULL,
@@ -151,38 +151,38 @@ const seedMateriaPrima = async () => {
         notas TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT fk_pagos_empleado
-          FOREIGN KEY (id_empleado) REFERENCES EMPLEADOS(id_empleado)
+          FOREIGN KEY (id_empleado) REFERENCES empleados(id_empleado)
           ON DELETE CASCADE
           ON UPDATE CASCADE
       )
     `);
 
     try {
-      await pool.query('ALTER TABLE PAGOS_EMPLEADOS ADD COLUMN bonos DECIMAL(10,2) DEFAULT 0.00');
+      await pool.query('ALTER TABLE pagos_empleados ADD COLUMN bonos DECIMAL(10,2) DEFAULT 0.00');
     } catch (e) {}
     try {
-      await pool.query('ALTER TABLE PAGOS_EMPLEADOS ADD COLUMN deducciones DECIMAL(10,2) DEFAULT 0.00');
+      await pool.query('ALTER TABLE pagos_empleados ADD COLUMN deducciones DECIMAL(10,2) DEFAULT 0.00');
     } catch (e) {}
     try {
-      await pool.query('ALTER TABLE PAGOS_EMPLEADOS ADD COLUMN notas TEXT');
+      await pool.query('ALTER TABLE pagos_empleados ADD COLUMN notas TEXT');
     } catch (e) {}
 
     // Sembrar empleados iniciales si está vacío
-    const [empRows] = await pool.query('SELECT COUNT(*) as total FROM EMPLEADOS');
+    const [empRows] = await pool.query('SELECT COUNT(*) as total FROM empleados');
     if (empRows[0].total === 0) {
-      console.log('Sembrando colaboradores iniciales del restaurante en EMPLEADOS...');
+      console.log('Sembrando colaboradores iniciales del restaurante en empleados...');
       for (const emp of empleadosIniciales) {
         await pool.query(
-          'INSERT INTO EMPLEADOS (nombre, puesto, telefono, sueldo_diario, fecha_ingreso, estado, experiencia_laboral) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO empleados (nombre, puesto, telefono, sueldo_diario, fecha_ingreso, estado, experiencia_laboral) VALUES (?, ?, ?, ?, ?, ?, ?)',
           [emp.nombre, emp.puesto, emp.telefono, emp.sueldo_diario, emp.fecha_ingreso, emp.estado, emp.experiencia_laboral]
         );
       }
-      console.log('✓ 5 Colaboradores iniciales insertados en EMPLEADOS.');
+      console.log('✓ 5 Colaboradores iniciales insertados en empleados.');
     }
 
-    // Asegurar estructura de PROVEEDORES
+    // Asegurar estructura de proveedores
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS PROVEEDORES (
+      CREATE TABLE IF NOT EXISTS proveedores (
         id_proveedor INT AUTO_INCREMENT PRIMARY KEY,
         nombre_comercial VARCHAR(150) NOT NULL,
         razon_social VARCHAR(150),
@@ -199,21 +199,21 @@ const seedMateriaPrima = async () => {
     `);
 
     // Sembrar proveedores iniciales si está vacío
-    const [provRows] = await pool.query('SELECT COUNT(*) as total FROM PROVEEDORES');
+    const [provRows] = await pool.query('SELECT COUNT(*) as total FROM proveedores');
     if (provRows[0].total === 0) {
       console.log('Sembrando directorio inicial de proveedores...');
       for (const prov of proveedoresIniciales) {
         await pool.query(
-          'INSERT INTO PROVEEDORES (nombre_comercial, razon_social, contacto_nombre, telefono, email, direccion, categoria_suministro, dias_entrega, estado, notas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO proveedores (nombre_comercial, razon_social, contacto_nombre, telefono, email, direccion, categoria_suministro, dias_entrega, estado, notas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [prov.nombre_comercial, prov.razon_social, prov.contacto_nombre, prov.telefono, prov.email, prov.direccion, prov.categoria_suministro, prov.dias_entrega, prov.estado, prov.notas]
         );
       }
-      console.log('✓ 6 Distribuidores iniciales insertados en PROVEEDORES.');
+      console.log('✓ 6 Distribuidores iniciales insertados en proveedores.');
     }
 
-    // Asegurar estructura de USUARIOS
+    // Asegurar estructura de usuarios
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS USUARIOS (
+      CREATE TABLE IF NOT EXISTS usuarios (
         id_usuario INT AUTO_INCREMENT PRIMARY KEY,
         nombre_completo VARCHAR(150) NOT NULL,
         nombre_negocio VARCHAR(150) DEFAULT 'FoodERP Restaurant',
@@ -229,34 +229,34 @@ const seedMateriaPrima = async () => {
     `);
 
     try {
-      await pool.query('ALTER TABLE USUARIOS ADD COLUMN nombre_negocio VARCHAR(150) DEFAULT "FoodERP Restaurant"');
+      await pool.query('ALTER TABLE usuarios ADD COLUMN nombre_negocio VARCHAR(150) DEFAULT "FoodERP Restaurant"');
     } catch (e) {}
     try {
-      await pool.query('ALTER TABLE USUARIOS ADD COLUMN tema_preferido VARCHAR(30) DEFAULT "nvidia-dark"');
+      await pool.query('ALTER TABLE usuarios ADD COLUMN tema_preferido VARCHAR(30) DEFAULT "nvidia-dark"');
     } catch (e) {}
 
     // Sembrar usuarios iniciales si está vacío
-    const [userRows] = await pool.query('SELECT COUNT(*) as total FROM USUARIOS');
+    const [userRows] = await pool.query('SELECT COUNT(*) as total FROM usuarios');
     if (userRows[0].total === 0) {
       console.log('Sembrando cuentas de usuario iniciales...');
       for (const u of usuariosIniciales) {
         await pool.query(
-          'INSERT INTO USUARIOS (nombre_completo, username, email, password_hash, rol, estado, nombre_negocio, tema_preferido) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO usuarios (nombre_completo, username, email, password_hash, rol, estado, nombre_negocio, tema_preferido) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
           [u.nombre_completo, u.username, u.email, u.password_hash, u.rol, u.estado, 'FoodERP Restaurant', 'nvidia-dark']
         );
       }
-      console.log('✓ 3 Usuarios iniciales creados en USUARIOS.');
+      console.log('✓ 3 Usuarios iniciales creados en usuarios.');
     }
 
     // Asegurar la cuenta maestra de Fernando Ramírez y migrar datos
     let idFernando = null;
-    const [fernandoUser] = await pool.query('SELECT id_usuario FROM USUARIOS WHERE email = ?', ['fernandoramirez@gmail.com']);
+    const [fernandoUser] = await pool.query('SELECT id_usuario FROM usuarios WHERE email = ?', ['fernandoramirez@gmail.com']);
     if (fernandoUser.length > 0) {
       idFernando = fernandoUser[0].id_usuario;
     } else {
       console.log('Creando cuenta principal de Fernando Ramírez...');
       const [insertFernando] = await pool.query(
-        `INSERT INTO USUARIOS (nombre_completo, nombre_negocio, username, email, password_hash, rol, estado, tema_preferido) 
+        `INSERT INTO usuarios (nombre_completo, nombre_negocio, username, email, password_hash, rol, estado, tema_preferido) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           'Fernando Ramírez',
@@ -275,15 +275,15 @@ const seedMateriaPrima = async () => {
 
     // Asegurar columna id_usuario en todas las tablas y migrar registros existentes a Fernando
     const tablasTenant = [
-      'MATERIA_PRIMA',
-      'PRODUCTOS',
-      'VENTAS',
-      'COMPRAS_MATERIA_PRIMA',
-      'DESPERDICIOS',
-      'GASTOS_OPERATIVOS',
-      'EMPLEADOS',
-      'PAGOS_EMPLEADOS',
-      'PROVEEDORES'
+      'materia_prima',
+      'productos',
+      'ventas',
+      'compras_materia_prima',
+      'desperdicios',
+      'gastos_operativos',
+      'empleados',
+      'pagos_empleados',
+      'proveedores'
     ];
 
     for (const tabla of tablasTenant) {

@@ -5,24 +5,24 @@ const getBalance = async (req, res) => {
   try {
     const userId = req.userId;
 
-    // 1. Ingresos reales desde VENTAS
+    // 1. Ingresos reales desde ventas
     const [ventas] = await pool.query(
       `SELECT 
         DATE_FORMAT(fecha_venta, '%Y-%m-%d') as fecha,
         SUM(total) as ingresos
-       FROM VENTAS
+       FROM ventas
        WHERE id_usuario = ?
        GROUP BY fecha_venta
        ORDER BY fecha_venta ASC`,
       [userId]
     );
 
-    // 2. Gastos reales desde COMPRAS_MATERIA_PRIMA
+    // 2. Gastos reales desde compras_materia_prima
     const [compras] = await pool.query(
       `SELECT 
         DATE_FORMAT(fecha_compra, '%Y-%m-%d') as fecha,
         SUM(costo_total) as gastos
-       FROM COMPRAS_MATERIA_PRIMA
+       FROM compras_materia_prima
        WHERE id_usuario = ?
        GROUP BY fecha_compra
        ORDER BY fecha_compra ASC`,
@@ -36,7 +36,7 @@ const getBalance = async (req, res) => {
         `SELECT 
           DATE_FORMAT(fecha_gasto, '%Y-%m-%d') as fecha,
           SUM(monto) as gastos_operativos
-         FROM GASTOS_OPERATIVOS
+         FROM gastos_operativos
          WHERE id_usuario = ?
          GROUP BY fecha_gasto
          ORDER BY fecha_gasto ASC`,
@@ -54,7 +54,7 @@ const getBalance = async (req, res) => {
         `SELECT 
           DATE_FORMAT(fecha_pago, '%Y-%m-%d') as fecha,
           SUM(total_pagado) as gastos_nomina
-         FROM PAGOS_EMPLEADOS
+         FROM pagos_empleados
          WHERE id_usuario = ?
          GROUP BY fecha_pago
          ORDER BY fecha_pago ASC`,

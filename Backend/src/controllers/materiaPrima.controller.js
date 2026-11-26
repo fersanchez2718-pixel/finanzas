@@ -13,7 +13,7 @@ const getAll = async (req, res) => {
   try {
     const userId = req.userId;
     const { busqueda, estado } = req.query;
-    let query = 'SELECT * FROM MATERIA_PRIMA WHERE id_usuario = ?';
+    let query = 'SELECT * FROM materia_prima WHERE id_usuario = ?';
     const params = [userId];
 
     if (busqueda) {
@@ -40,7 +40,7 @@ const getAll = async (req, res) => {
 const getById = async (req, res) => {
   try {
     const { id } = req.params;
-    const [rows] = await pool.query('SELECT * FROM MATERIA_PRIMA WHERE id_materia_prima = ? AND id_usuario = ?', [id, req.userId]);
+    const [rows] = await pool.query('SELECT * FROM materia_prima WHERE id_materia_prima = ? AND id_usuario = ?', [id, req.userId]);
 
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Insumo no encontrado' });
@@ -79,7 +79,7 @@ const create = async (req, res) => {
     const estadoFinal = calcularEstado(cantidadNum, estado);
 
     const [result] = await pool.query(
-      'INSERT INTO MATERIA_PRIMA (nombre, unidad_medida, cantidad_disponible, costo_unitario, estado, id_usuario) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO materia_prima (nombre, unidad_medida, cantidad_disponible, costo_unitario, estado, id_usuario) VALUES (?, ?, ?, ?, ?, ?)',
       [nombre.trim(), unidad_medida.trim(), cantidadNum, costoNum, estadoFinal, userId]
     );
 
@@ -106,7 +106,7 @@ const update = async (req, res) => {
     const userId = req.userId;
     const { nombre, unidad_medida, cantidad_disponible, costo_unitario, estado } = req.body;
 
-    const [existente] = await pool.query('SELECT * FROM MATERIA_PRIMA WHERE id_materia_prima = ? AND id_usuario = ?', [id, userId]);
+    const [existente] = await pool.query('SELECT * FROM materia_prima WHERE id_materia_prima = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Insumo no encontrado' });
     }
@@ -118,7 +118,7 @@ const update = async (req, res) => {
     const estadoFinal = calcularEstado(cantidadNum, estado || existente[0].estado);
 
     await pool.query(
-      'UPDATE MATERIA_PRIMA SET nombre = ?, unidad_medida = ?, cantidad_disponible = ?, costo_unitario = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
+      'UPDATE materia_prima SET nombre = ?, unidad_medida = ?, cantidad_disponible = ?, costo_unitario = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
       [nombreFinal, unidadFinal, cantidadNum, costoNum, estadoFinal, id, userId]
     );
 
@@ -145,12 +145,12 @@ const remove = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId;
-    const [existente] = await pool.query('SELECT * FROM MATERIA_PRIMA WHERE id_materia_prima = ? AND id_usuario = ?', [id, userId]);
+    const [existente] = await pool.query('SELECT * FROM materia_prima WHERE id_materia_prima = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Insumo no encontrado' });
     }
 
-    await pool.query('DELETE FROM MATERIA_PRIMA WHERE id_materia_prima = ? AND id_usuario = ?', [id, userId]);
+    await pool.query('DELETE FROM materia_prima WHERE id_materia_prima = ? AND id_usuario = ?', [id, userId]);
 
     res.json({ success: true, message: 'Insumo eliminado exitosamente' });
   } catch (error) {

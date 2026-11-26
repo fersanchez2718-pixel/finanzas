@@ -46,7 +46,7 @@ const optionalAuth = async (req, res, next) => {
     }
 
     // Fallback de compatibilidad: si no hay token, resolver a la cuenta principal (Fernando Ramírez)
-    const [rows] = await pool.query('SELECT id_usuario FROM USUARIOS WHERE email = ? LIMIT 1', ['fernandoramirez@gmail.com']);
+    const [rows] = await pool.query('SELECT id_usuario FROM usuarios WHERE email = ? LIMIT 1', ['fernandoramirez@gmail.com']);
     if (rows.length > 0) {
       req.userId = rows[0].id_usuario;
     } else {

@@ -12,7 +12,7 @@ const getAll = async (req, res) => {
         DATE_FORMAT(v.fecha_venta, '%Y-%m-%d') as fecha_venta,
         v.total,
         v.metodo_pago
-      FROM VENTAS v
+      FROM ventas v
       WHERE v.id_usuario = ?
     `;
     const params = [userId];
@@ -59,8 +59,8 @@ const getAll = async (req, res) => {
         d.precio_unitario,
         d.subtotal,
         p.nombre_producto
-       FROM DETALLE_VENTA d
-       JOIN PRODUCTOS p ON d.id_producto = p.id_producto
+       FROM detalle_venta d
+       JOIN productos p ON d.id_producto = p.id_producto
        WHERE d.id_venta IN (?)
        ORDER BY d.id_detalle ASC`,
       [idsVentas]
@@ -147,7 +147,7 @@ const create = async (req, res) => {
 
     // 1. Insertar venta asociada al id_usuario
     const [resultVenta] = await connection.query(
-      'INSERT INTO VENTAS (fecha_venta, total, metodo_pago, id_usuario) VALUES (?, ?, ?, ?)',
+      'INSERT INTO ventas (fecha_venta, total, metodo_pago, id_usuario) VALUES (?, ?, ?, ?)',
       [fecha_venta, totalCalculado, metodo_pago, userId]
     );
 
@@ -160,7 +160,7 @@ const create = async (req, res) => {
       const subtotal = cant * precio;
 
       await connection.query(
-        'INSERT INTO DETALLE_VENTA (id_venta, id_producto, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)',
         [idVenta, item.id_producto, cant, precio, subtotal]
       );
     }
@@ -216,7 +216,7 @@ const update = async (req, res) => {
     await connection.beginTransaction();
 
     // 1. Verificar existencia para este usuario
-    const [existente] = await connection.query('SELECT id_venta FROM VENTAS WHERE id_venta = ? AND id_usuario = ? FOR UPDATE', [id, userId]);
+    const [existente] = await connection.query('SELECT id_venta FROM ventas WHERE id_venta = ? AND id_usuario = ? FOR UPDATE', [id, userId]);
     if (existente.length === 0) {
       await connection.rollback();
       return res.status(404).json({ success: false, message: 'La venta que intentas modificar no existe' });
@@ -224,12 +224,12 @@ const update = async (req, res) => {
 
     // 2. Actualizar cabecera de la venta
     await connection.query(
-      'UPDATE VENTAS SET fecha_venta = ?, total = ?, metodo_pago = ? WHERE id_venta = ? AND id_usuario = ?',
+      'UPDATE ventas SET fecha_venta = ?, total = ?, metodo_pago = ? WHERE id_venta = ? AND id_usuario = ?',
       [fecha_venta, totalCalculado, metodo_pago, id, userId]
     );
 
     // 3. Eliminar partidas anteriores y reinsertar las actualizadas
-    await connection.query('DELETE FROM DETALLE_VENTA WHERE id_venta = ?', [id]);
+    await connection.query('DELETE FROM detalle_venta WHERE id_venta = ?', [id]);
 
     for (const item of items) {
       const cant = parseInt(item.cantidad, 10);
@@ -237,7 +237,7 @@ const update = async (req, res) => {
       const subtotal = cant * precio;
 
       await connection.query(
-        'INSERT INTO DETALLE_VENTA (id_venta, id_producto, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)',
         [id, item.id_producto, cant, precio, subtotal]
       );
     }
@@ -268,7 +268,7 @@ const remove = async (req, res) => {
   try {
     const userId = req.userId;
     const { id } = req.params;
-    const [result] = await pool.query('DELETE FROM VENTAS WHERE id_venta = ? AND id_usuario = ?', [id, userId]);
+    const [result] = await pool.query('DELETE FROM ventas WHERE id_venta = ? AND id_usuario = ?', [id, userId]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Venta no encontrada' });
@@ -305,13 +305,13 @@ const getReporte = async (req, res) => {
 
     // Totales generales
     const [totales] = await pool.query(
-      `SELECT COUNT(*) as total_ordenes, COALESCE(SUM(total), 0) as total_recaudado, COALESCE(AVG(total), 0) as promedio_orden FROM VENTAS v ${whereClause}`,
+      `SELECT COUNT(*) as total_ordenes, COALESCE(SUM(total), 0) as total_recaudado, COALESCE(AVG(total), 0) as promedio_orden FROM ventas v ${whereClause}`,
       params
     );
 
     // Desglose por método de pago
     const [metodos] = await pool.query(
-      `SELECT metodo_pago, COUNT(*) as cantidad, SUM(total) as monto FROM VENTAS v ${whereClause} GROUP BY metodo_pago ORDER BY monto DESC`,
+      `SELECT metodo_pago, COUNT(*) as cantidad, SUM(total) as monto FROM ventas v ${whereClause} GROUP BY metodo_pago ORDER BY monto DESC`,
       params
     );
 
@@ -333,9 +333,9 @@ const getReporte = async (req, res) => {
 
     const [topProductos] = await pool.query(
       `SELECT p.nombre_producto, SUM(d.cantidad) as total_vendido, SUM(d.subtotal) as ingresos_generados
-       FROM DETALLE_VENTA d
-       JOIN PRODUCTOS p ON d.id_producto = p.id_producto
-       JOIN VENTAS v ON d.id_venta = v.id_venta
+       FROM detalle_venta d
+       JOIN productos p ON d.id_producto = p.id_producto
+       JOIN ventas v ON d.id_venta = v.id_venta
        ${whereDetalle}
        GROUP BY p.id_producto, p.nombre_producto
        ORDER BY total_vendido DESC
@@ -350,7 +350,7 @@ const getReporte = async (req, res) => {
         DATE_FORMAT(v.fecha_venta, '%Y-%m-%d') as fecha_venta,
         v.total,
         v.metodo_pago
-      FROM VENTAS v
+      FROM ventas v
       ${whereClause}
       ORDER BY v.fecha_venta DESC, v.id_venta DESC`,
       params
@@ -368,8 +368,8 @@ const getReporte = async (req, res) => {
           d.precio_unitario,
           d.subtotal,
           p.nombre_producto
-         FROM DETALLE_VENTA d
-         JOIN PRODUCTOS p ON d.id_producto = p.id_producto
+         FROM detalle_venta d
+         JOIN productos p ON d.id_producto = p.id_producto
          WHERE d.id_venta IN (?)
          ORDER BY d.id_detalle ASC`,
         [idsVentas]

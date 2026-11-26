@@ -21,7 +21,7 @@ const getAll = async (req, res) => {
         COALESCE(estado, 'Activo') as estado,
         DATE_FORMAT(ultimo_acceso, '%Y-%m-%d %H:%i') as ultimo_acceso,
         DATE_FORMAT(created_at, '%Y-%m-%d') as fecha_registro
-      FROM USUARIOS
+      FROM usuarios
       WHERE 1=1
     `;
     const params = [];
@@ -88,7 +88,7 @@ const create = async (req, res) => {
 
     // Validar si username o email ya existen
     const [existentes] = await pool.query(
-      'SELECT id_usuario FROM USUARIOS WHERE username = ? OR email = ?',
+      'SELECT id_usuario FROM usuarios WHERE username = ? OR email = ?',
       [cleanUsername, cleanEmail]
     );
 
@@ -102,7 +102,7 @@ const create = async (req, res) => {
     const passwordHash = hashPassword(password);
 
     const [result] = await pool.query(
-      `INSERT INTO USUARIOS 
+      `INSERT INTO usuarios 
         (nombre_completo, username, email, password_hash, rol, estado) 
        VALUES (?, ?, ?, ?, ?, ?)`,
       [
@@ -139,7 +139,7 @@ const update = async (req, res) => {
       });
     }
 
-    const [existente] = await pool.query('SELECT id_usuario FROM USUARIOS WHERE id_usuario = ?', [id]);
+    const [existente] = await pool.query('SELECT id_usuario FROM usuarios WHERE id_usuario = ?', [id]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
     }
@@ -147,14 +147,14 @@ const update = async (req, res) => {
     if (password && password.trim().length > 0) {
       const passwordHash = hashPassword(password.trim());
       await pool.query(
-        `UPDATE USUARIOS 
+        `UPDATE usuarios 
          SET nombre_completo = ?, email = ?, rol = ?, estado = ?, password_hash = ?
          WHERE id_usuario = ?`,
         [nombre_completo.trim(), email.trim().toLowerCase(), rol, estado || 'Activo', passwordHash, id]
       );
     } else {
       await pool.query(
-        `UPDATE USUARIOS 
+        `UPDATE usuarios 
          SET nombre_completo = ?, email = ?, rol = ?, estado = ?
          WHERE id_usuario = ?`,
         [nombre_completo.trim(), email.trim().toLowerCase(), rol, estado || 'Activo', id]
@@ -176,12 +176,12 @@ const remove = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [existente] = await pool.query('SELECT id_usuario, rol FROM USUARIOS WHERE id_usuario = ?', [id]);
+    const [existente] = await pool.query('SELECT id_usuario, rol FROM usuarios WHERE id_usuario = ?', [id]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
     }
 
-    await pool.query('DELETE FROM USUARIOS WHERE id_usuario = ?', [id]);
+    await pool.query('DELETE FROM usuarios WHERE id_usuario = ?', [id]);
 
     res.json({
       success: true,

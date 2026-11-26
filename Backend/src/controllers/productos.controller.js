@@ -5,7 +5,7 @@ const getProductos = async (req, res) => {
   try {
     const userId = req.userId;
     const [rows] = await pool.query(
-      'SELECT id_producto, nombre_producto, descripcion, precio, estado FROM PRODUCTOS WHERE id_usuario = ? AND estado = "Disponible" ORDER BY nombre_producto ASC',
+      'SELECT id_producto, nombre_producto, descripcion, precio, estado FROM productos WHERE id_usuario = ? AND estado = "Disponible" ORDER BY nombre_producto ASC',
       [userId]
     );
     res.json({ success: true, data: rows });
@@ -31,7 +31,7 @@ const createProducto = async (req, res) => {
     }
 
     const [result] = await pool.query(
-      'INSERT INTO PRODUCTOS (nombre_producto, descripcion, precio, estado, id_usuario) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO productos (nombre_producto, descripcion, precio, estado, id_usuario) VALUES (?, ?, ?, ?, ?)',
       [nombre_producto.trim(), descripcion ? descripcion.trim() : '', precioNum, estado || 'Disponible', userId]
     );
 

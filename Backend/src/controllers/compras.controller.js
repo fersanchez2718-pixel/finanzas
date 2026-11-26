@@ -17,8 +17,8 @@ const getAll = async (req, res) => {
         m.nombre AS nombre_materia_prima,
         m.unidad_medida,
         m.cantidad_disponible AS stock_actual_insumo
-      FROM COMPRAS_MATERIA_PRIMA c
-      JOIN MATERIA_PRIMA m ON c.id_materia_prima = m.id_materia_prima
+      FROM compras_materia_prima c
+      JOIN materia_prima m ON c.id_materia_prima = m.id_materia_prima
       WHERE c.id_usuario = ?
     `;
     const params = [userId];
@@ -69,7 +69,7 @@ const getAll = async (req, res) => {
   }
 };
 
-// Registrar una nueva compra y actualizar stock en MATERIA_PRIMA
+// Registrar una nueva compra y actualizar stock en materia_prima
 const create = async (req, res) => {
   let connection;
   try {
@@ -98,7 +98,7 @@ const create = async (req, res) => {
 
     // 1. Verificar insumo del usuario
     const [insumo] = await connection.query(
-      'SELECT id_materia_prima, nombre, cantidad_disponible, costo_unitario FROM MATERIA_PRIMA WHERE id_materia_prima = ? AND id_usuario = ? FOR UPDATE',
+      'SELECT id_materia_prima, nombre, cantidad_disponible, costo_unitario FROM materia_prima WHERE id_materia_prima = ? AND id_usuario = ? FOR UPDATE',
       [id_materia_prima, userId]
     );
 
@@ -109,7 +109,7 @@ const create = async (req, res) => {
 
     // 2. Insertar compra con id_usuario
     const [resultCompra] = await connection.query(
-      'INSERT INTO COMPRAS_MATERIA_PRIMA (id_materia_prima, fecha_compra, cantidad, costo_total, id_usuario) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO compras_materia_prima (id_materia_prima, fecha_compra, cantidad, costo_total, id_usuario) VALUES (?, ?, ?, ?, ?)',
       [id_materia_prima, fecha_compra, cantNum, costoNum, userId]
     );
 
@@ -119,7 +119,7 @@ const create = async (req, res) => {
     const nuevoEstado = nuevoStock > 5 ? 'Disponible' : nuevoStock > 0 ? 'Stock Bajo' : 'Agotado';
 
     await connection.query(
-      'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
+      'UPDATE materia_prima SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
       [nuevoStock, nuevoEstado, id_materia_prima, userId]
     );
 
@@ -160,7 +160,7 @@ const remove = async (req, res) => {
 
     // 1. Obtener datos de la compra a anular
     const [compra] = await connection.query(
-      'SELECT id_compra, id_materia_prima, cantidad FROM COMPRAS_MATERIA_PRIMA WHERE id_compra = ? AND id_usuario = ? FOR UPDATE',
+      'SELECT id_compra, id_materia_prima, cantidad FROM compras_materia_prima WHERE id_compra = ? AND id_usuario = ? FOR UPDATE',
       [id, userId]
     );
 
@@ -173,11 +173,11 @@ const remove = async (req, res) => {
     const cantNum = parseFloat(cantidad);
 
     // 2. Eliminar compra
-    await connection.query('DELETE FROM COMPRAS_MATERIA_PRIMA WHERE id_compra = ? AND id_usuario = ?', [id, userId]);
+    await connection.query('DELETE FROM compras_materia_prima WHERE id_compra = ? AND id_usuario = ?', [id, userId]);
 
-    // 3. Revertir stock en MATERIA_PRIMA
+    // 3. Revertir stock en materia_prima
     const [insumo] = await connection.query(
-      'SELECT cantidad_disponible, nombre FROM MATERIA_PRIMA WHERE id_materia_prima = ? AND id_usuario = ? FOR UPDATE',
+      'SELECT cantidad_disponible, nombre FROM materia_prima WHERE id_materia_prima = ? AND id_usuario = ? FOR UPDATE',
       [id_materia_prima, userId]
     );
 
@@ -187,7 +187,7 @@ const remove = async (req, res) => {
       const nuevoEstado = stockRevertido > 5 ? 'Disponible' : stockRevertido > 0 ? 'Stock Bajo' : 'Agotado';
 
       await connection.query(
-        'UPDATE MATERIA_PRIMA SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
+        'UPDATE materia_prima SET cantidad_disponible = ?, estado = ? WHERE id_materia_prima = ? AND id_usuario = ?',
         [stockRevertido, nuevoEstado, id_materia_prima, userId]
       );
     }

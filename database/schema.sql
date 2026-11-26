@@ -12,10 +12,10 @@ CREATE DATABASE Finanzas_BD
 USE Finanzas_BD;
 
 -- =========================================================
--- Tabla: USUARIOS
+-- Tabla: usuarios
 -- Cuentas de usuario, personalización de negocio y temas visuales
 -- =========================================================
-CREATE TABLE IF NOT EXISTS USUARIOS (
+CREATE TABLE IF NOT EXISTS usuarios (
     id_usuario             INT AUTO_INCREMENT PRIMARY KEY,
     nombre_completo        VARCHAR(150) NOT NULL,
     nombre_negocio         VARCHAR(150) DEFAULT 'FoodERP Restaurant & Gourmet',
@@ -30,9 +30,9 @@ CREATE TABLE IF NOT EXISTS USUARIOS (
 );
 
 -- =========================================================
--- Tabla: EMPLEADOS
+-- Tabla: empleados
 -- =========================================================
-CREATE TABLE EMPLEADOS (
+CREATE TABLE empleados (
     id_empleado            INT AUTO_INCREMENT PRIMARY KEY,
     nombre                 VARCHAR(150) NOT NULL,
     puesto                 VARCHAR(100) DEFAULT 'General',
@@ -43,15 +43,15 @@ CREATE TABLE EMPLEADOS (
     experiencia_laboral    VARCHAR(255),
     id_usuario             INT,
     CONSTRAINT fk_empleados_usuario
-        FOREIGN KEY (id_usuario) REFERENCES USUARIOS(id_usuario)
+        FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 -- =========================================================
--- Tabla: MATERIA_PRIMA
+-- Tabla: materia_prima
 -- =========================================================
-CREATE TABLE MATERIA_PRIMA (
+CREATE TABLE materia_prima (
     id_materia_prima       INT AUTO_INCREMENT PRIMARY KEY,
     nombre                 VARCHAR(150) NOT NULL,
     unidad_medida          VARCHAR(50) NOT NULL,
@@ -60,15 +60,15 @@ CREATE TABLE MATERIA_PRIMA (
     estado                 VARCHAR(50) NOT NULL,
     id_usuario             INT,
     CONSTRAINT fk_materia_usuario
-        FOREIGN KEY (id_usuario) REFERENCES USUARIOS(id_usuario)
+        FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 -- =========================================================
--- Tabla: PRODUCTOS
+-- Tabla: productos
 -- =========================================================
-CREATE TABLE PRODUCTOS (
+CREATE TABLE productos (
     id_producto            INT AUTO_INCREMENT PRIMARY KEY,
     nombre_producto        VARCHAR(150) NOT NULL,
     descripcion            VARCHAR(255),
@@ -76,30 +76,30 @@ CREATE TABLE PRODUCTOS (
     estado                 VARCHAR(50) NOT NULL,
     id_usuario             INT,
     CONSTRAINT fk_productos_usuario
-        FOREIGN KEY (id_usuario) REFERENCES USUARIOS(id_usuario)
+        FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 -- =========================================================
--- Tabla: VENTAS
+-- Tabla: ventas
 -- =========================================================
-CREATE TABLE VENTAS (
+CREATE TABLE ventas (
     id_venta               INT AUTO_INCREMENT PRIMARY KEY,
     fecha_venta            DATE NOT NULL,
     total                  DECIMAL(10,2) NOT NULL,
     metodo_pago            VARCHAR(50) NOT NULL,
     id_usuario             INT,
     CONSTRAINT fk_ventas_usuario
-        FOREIGN KEY (id_usuario) REFERENCES USUARIOS(id_usuario)
+        FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 -- =========================================================
--- Tabla: PAGOS_EMPLEADOS
+-- Tabla: pagos_empleados
 -- =========================================================
-CREATE TABLE PAGOS_EMPLEADOS (
+CREATE TABLE pagos_empleados (
     id_pago                INT AUTO_INCREMENT PRIMARY KEY,
     id_empleado            INT NOT NULL,
     fecha_pago             DATE NOT NULL,
@@ -114,15 +114,15 @@ CREATE TABLE PAGOS_EMPLEADOS (
     id_usuario             INT,
     created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_pagos_empleado
-        FOREIGN KEY (id_empleado) REFERENCES EMPLEADOS(id_empleado)
+        FOREIGN KEY (id_empleado) REFERENCES empleados(id_empleado)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 -- =========================================================
--- Tabla: DETALLE_VENTA
+-- Tabla: detalle_venta
 -- =========================================================
-CREATE TABLE DETALLE_VENTA (
+CREATE TABLE detalle_venta (
     id_detalle             INT AUTO_INCREMENT PRIMARY KEY,
     id_venta               INT NOT NULL,
     id_producto            INT NOT NULL,
@@ -130,37 +130,37 @@ CREATE TABLE DETALLE_VENTA (
     precio_unitario        DECIMAL(10,2) NOT NULL,
     subtotal               DECIMAL(10,2) NOT NULL,
     CONSTRAINT fk_detalle_venta
-        FOREIGN KEY (id_venta) REFERENCES VENTAS(id_venta)
+        FOREIGN KEY (id_venta) REFERENCES ventas(id_venta)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT fk_detalle_producto
-        FOREIGN KEY (id_producto) REFERENCES PRODUCTOS(id_producto)
+        FOREIGN KEY (id_producto) REFERENCES productos(id_producto)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 -- =========================================================
--- Tabla: PRODUCTO_MATERIA_PRIMA
+-- Tabla: producto_materia_prima
 -- =========================================================
-CREATE TABLE PRODUCTO_MATERIA_PRIMA (
+CREATE TABLE producto_materia_prima (
     id_producto            INT NOT NULL,
     id_materia_prima       INT NOT NULL,
     cantidad_necesaria     DECIMAL(10,2) NOT NULL,
     PRIMARY KEY (id_producto, id_materia_prima),
     CONSTRAINT fk_pmp_producto
-        FOREIGN KEY (id_producto) REFERENCES PRODUCTOS(id_producto)
+        FOREIGN KEY (id_producto) REFERENCES productos(id_producto)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT fk_pmp_materia_prima
-        FOREIGN KEY (id_materia_prima) REFERENCES MATERIA_PRIMA(id_materia_prima)
+        FOREIGN KEY (id_materia_prima) REFERENCES materia_prima(id_materia_prima)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 -- =========================================================
--- Tabla: COMPRAS_MATERIA_PRIMA
+-- Tabla: compras_materia_prima
 -- =========================================================
-CREATE TABLE COMPRAS_MATERIA_PRIMA (
+CREATE TABLE compras_materia_prima (
     id_compra              INT AUTO_INCREMENT PRIMARY KEY,
     id_materia_prima       INT NOT NULL,
     fecha_compra           DATE NOT NULL,
@@ -168,15 +168,15 @@ CREATE TABLE COMPRAS_MATERIA_PRIMA (
     costo_total            DECIMAL(10,2) NOT NULL,
     id_usuario             INT,
     CONSTRAINT fk_compras_materia_prima
-        FOREIGN KEY (id_materia_prima) REFERENCES MATERIA_PRIMA(id_materia_prima)
+        FOREIGN KEY (id_materia_prima) REFERENCES materia_prima(id_materia_prima)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 -- =========================================================
--- Tabla: DESPERDICIOS
+-- Tabla: desperdicios
 -- =========================================================
-CREATE TABLE DESPERDICIOS (
+CREATE TABLE desperdicios (
     id_desperdicio         INT AUTO_INCREMENT PRIMARY KEY,
     id_materia_prima       INT NOT NULL,
     fecha                  DATE NOT NULL,
@@ -185,15 +185,15 @@ CREATE TABLE DESPERDICIOS (
     motivo                 VARCHAR(255),
     id_usuario             INT,
     CONSTRAINT fk_desperdicios_materia_prima
-        FOREIGN KEY (id_materia_prima) REFERENCES MATERIA_PRIMA(id_materia_prima)
+        FOREIGN KEY (id_materia_prima) REFERENCES materia_prima(id_materia_prima)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 -- =========================================================
--- Tabla: GASTOS_OPERATIVOS
+-- Tabla: gastos_operativos
 -- =========================================================
-CREATE TABLE IF NOT EXISTS GASTOS_OPERATIVOS (
+CREATE TABLE IF NOT EXISTS gastos_operativos (
     id_gasto               INT AUTO_INCREMENT PRIMARY KEY,
     concepto               VARCHAR(150) NOT NULL,
     categoria              VARCHAR(60) NOT NULL,
@@ -207,9 +207,9 @@ CREATE TABLE IF NOT EXISTS GASTOS_OPERATIVOS (
 );
 
 -- =========================================================
--- Tabla: PROVEEDORES
+-- Tabla: proveedores
 -- =========================================================
-CREATE TABLE IF NOT EXISTS PROVEEDORES (
+CREATE TABLE IF NOT EXISTS proveedores (
     id_proveedor           INT AUTO_INCREMENT PRIMARY KEY,
     nombre_comercial       VARCHAR(150) NOT NULL,
     razon_social           VARCHAR(150),

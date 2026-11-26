@@ -1,7 +1,7 @@
 const pool = require('../config/db');
 
 // ==========================================
-// CONTROLADOR DE EMPLEADOS
+// CONTROLADOR DE empleados
 // ==========================================
 
 // Obtener todos los colaboradores del usuario
@@ -19,7 +19,7 @@ const getEmpleados = async (req, res) => {
         DATE_FORMAT(fecha_ingreso, '%Y-%m-%d') as fecha_ingreso,
         COALESCE(estado, 'Activo') as estado,
         experiencia_laboral
-      FROM EMPLEADOS
+      FROM empleados
       WHERE id_usuario = ?
     `;
     const params = [userId];
@@ -65,7 +65,7 @@ const createEmpleado = async (req, res) => {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO EMPLEADOS 
+      `INSERT INTO empleados 
         (nombre, puesto, telefono, sueldo_diario, fecha_ingreso, estado, experiencia_laboral, id_usuario) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -113,13 +113,13 @@ const updateEmpleado = async (req, res) => {
       });
     }
 
-    const [existente] = await pool.query('SELECT id_empleado FROM EMPLEADOS WHERE id_empleado = ? AND id_usuario = ?', [id, userId]);
+    const [existente] = await pool.query('SELECT id_empleado FROM empleados WHERE id_empleado = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Colaborador no encontrado' });
     }
 
     await pool.query(
-      `UPDATE EMPLEADOS 
+      `UPDATE empleados 
        SET nombre = ?, puesto = ?, telefono = ?, sueldo_diario = ?, fecha_ingreso = ?, estado = ?, experiencia_laboral = ?
        WHERE id_empleado = ? AND id_usuario = ?`,
       [
@@ -151,12 +151,12 @@ const removeEmpleado = async (req, res) => {
     const userId = req.userId;
     const { id } = req.params;
 
-    const [existente] = await pool.query('SELECT id_empleado FROM EMPLEADOS WHERE id_empleado = ? AND id_usuario = ?', [id, userId]);
+    const [existente] = await pool.query('SELECT id_empleado FROM empleados WHERE id_empleado = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Colaborador no encontrado' });
     }
 
-    await pool.query('DELETE FROM EMPLEADOS WHERE id_empleado = ? AND id_usuario = ?', [id, userId]);
+    await pool.query('DELETE FROM empleados WHERE id_empleado = ? AND id_usuario = ?', [id, userId]);
 
     res.json({
       success: true,
@@ -193,8 +193,8 @@ const getPagos = async (req, res) => {
         p.total_pagado,
         p.metodo_pago,
         p.notas
-      FROM PAGOS_EMPLEADOS p
-      JOIN EMPLEADOS e ON p.id_empleado = e.id_empleado
+      FROM pagos_empleados p
+      JOIN empleados e ON p.id_empleado = e.id_empleado
       WHERE p.id_usuario = ?
     `;
     const params = [userId];
@@ -261,7 +261,7 @@ const createPago = async (req, res) => {
     }
 
     // Validar que el empleado pertenezca al usuario
-    const [empCheck] = await pool.query('SELECT id_empleado FROM EMPLEADOS WHERE id_empleado = ? AND id_usuario = ?', [id_empleado, userId]);
+    const [empCheck] = await pool.query('SELECT id_empleado FROM empleados WHERE id_empleado = ? AND id_usuario = ?', [id_empleado, userId]);
     if (empCheck.length === 0) {
       return res.status(404).json({ success: false, message: 'Empleado no encontrado' });
     }
@@ -271,7 +271,7 @@ const createPago = async (req, res) => {
     const totalCalculado = Math.max(0, subtotal + bonosNum - deduccionesNum);
 
     const [result] = await pool.query(
-      `INSERT INTO PAGOS_EMPLEADOS 
+      `INSERT INTO pagos_empleados 
         (id_empleado, fecha_pago, periodo, dias_trabajados, sueldo_diario, bonos, deducciones, total_pagado, metodo_pago, notas, id_usuario) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -307,12 +307,12 @@ const removePago = async (req, res) => {
     const userId = req.userId;
     const { id } = req.params;
 
-    const [existente] = await pool.query('SELECT id_pago FROM PAGOS_EMPLEADOS WHERE id_pago = ? AND id_usuario = ?', [id, userId]);
+    const [existente] = await pool.query('SELECT id_pago FROM pagos_empleados WHERE id_pago = ? AND id_usuario = ?', [id, userId]);
     if (existente.length === 0) {
       return res.status(404).json({ success: false, message: 'Recibo de nómina no encontrado' });
     }
 
-    await pool.query('DELETE FROM PAGOS_EMPLEADOS WHERE id_pago = ? AND id_usuario = ?', [id, userId]);
+    await pool.query('DELETE FROM pagos_empleados WHERE id_pago = ? AND id_usuario = ?', [id, userId]);
 
     res.json({
       success: true,
@@ -329,12 +329,12 @@ const getResumenNomina = async (req, res) => {
   try {
     const userId = req.userId;
     const [empRows] = await pool.query(
-      'SELECT COUNT(*) as total_empleados, SUM(CASE WHEN estado = "Activo" THEN 1 ELSE 0 END) as empleados_activos, SUM(CASE WHEN estado = "Activo" THEN sueldo_diario ELSE 0 END) as costo_diario_plantilla FROM EMPLEADOS WHERE id_usuario = ?',
+      'SELECT COUNT(*) as total_empleados, SUM(CASE WHEN estado = "Activo" THEN 1 ELSE 0 END) as empleados_activos, SUM(CASE WHEN estado = "Activo" THEN sueldo_diario ELSE 0 END) as costo_diario_plantilla FROM empleados WHERE id_usuario = ?',
       [userId]
     );
 
     const [pagoRows] = await pool.query(
-      'SELECT COALESCE(SUM(total_pagado), 0) as total_historico, COUNT(*) as total_recibos FROM PAGOS_EMPLEADOS WHERE id_usuario = ?',
+      'SELECT COALESCE(SUM(total_pagado), 0) as total_historico, COUNT(*) as total_recibos FROM pagos_empleados WHERE id_usuario = ?',
       [userId]
     );
 
