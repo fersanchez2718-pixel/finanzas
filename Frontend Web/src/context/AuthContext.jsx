@@ -30,7 +30,8 @@ if (typeof window !== 'undefined' && !window.__fooderp_fetch_intercepted__) {
     }
 
     const token = localStorage.getItem('fooderp_token');
-    const isApiCall = typeof resource === 'string' && resource.includes(':3000/api');
+    const isApiCall = typeof resource === 'string' &&
+      (resource === API_BASE || resource.startsWith(`${API_BASE}/`));
 
     if (token && isApiCall) {
       const headers = new Headers(config.headers || {});
